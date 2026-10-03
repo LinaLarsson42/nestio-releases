@@ -1,0 +1,73 @@
+# Prüft stündlich die Download-Zahlen der Releases. Wurde eine Nestio-APK neu
+# heruntergeladen, kommentiert die Action im Issue
+# "Download-Benachrichtigungen" – GitHub schickt dafür eine Mail an die Repo-Besitzerin.
+# Auch Updates über den Hinweis in der App laden die APK und zählen deshalb mit.
+# Der letzte Stand liegt in stats/downloads.json (ändert sich nur bei neuen Downloads).
+
+name: Download-Benachrichtigung
+
+on:
+  schedule:
+    - cron: '17 * * * *'   # stündlich (GitHub startet geplante Läufe teils mit Verzögerung)
+  workflow_dispatch:       # manuell auslösbar unter Actions → "Run workflow"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency: download-alert
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download-Zahlen vergleichen
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const statePath = 'stats/downloads.json';
+            const { owner, repo } = context.repo;
+
+            const releases = await github.paginate(github.rest.repos.listReleases, { owner, repo, per_page: 100 });
+            const now = {};
+            for (const r of releases)
+              for (const a of r.assets) now[`${r.tag_name}/${a.name}`] = a.download_count;
+
+            const kind = name => name.endsWith('.apk') ? 'APK' : null;
+            const total = k => Object.entries(now).filter(([n]) => kind(n) === k).reduce((s, [, v]) => s + v, 0);
+
+            const old = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : null;
+            fs.mkdirSync('stats', { recursive: true });
+            fs.writeFileSync(statePath, JSON.stringify(now, null, 2) + '\n');
+            if (!old) { core.info('Erster Lauf: Stand gespeichert, keine Benachrichtigung.'); return; }
+
+            const news = Object.entries(now)
+              .map(([n, v]) => ({ n, d: v - (old[n] ?? 0), k: kind(n) }))
+              .filter(x => x.d > 0 && x.k);
+            if (!news.length) { core.info('Keine neuen Downloads.'); return; }
+
+            const lines = news.map(x => `- **${x.d}×** ${x.k}: \`${x.n}\``).join('\n');
+            const text =
+              `📥 **Neue Downloads**\n\n${lines}\n\n` +
+              `Insgesamt bisher: **${total('APK')}** APK-Downloads.`;
+
+            const title = 'Download-Benachrichtigungen';
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open' });
+            const issue = issues.find(i => i.title === title);
+            if (issue) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: text });
+            } else {
+              await github.rest.issues.create({ owner, repo, title,
+                body: 'Hier meldet die Action „Download-Benachrichtigung“ neue Downloads von Nestio. ' +
+                      'Jeder Kommentar löst eine Benachrichtigungs-Mail aus.\n\n' + text });
+            }
+
+      - name: Stand speichern
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stats/downloads.json
+          git diff --cached --quiet || (git commit -m "stats: Download-Zahlen aktualisiert" && git push)
