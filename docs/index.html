@@ -1,0 +1,1496 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nestio</title>
+<meta name="description" content="Nestio ist die Familien-App für Eltern mit Kita- und Schulkindern: Aufgaben, Einkauf, Essensplan, Stundenplan, Kinderroutine, Verträge und Finanzen an einem Ort, für alle im Haushalt.">
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+/* Layout: ein voller Kühlschrank voller Zettel wird zu einem Nest. Asymmetrische Kapitel,
+   gruppiert wie die „Bereiche" in der App; Screenshots stehen als Handyrahmen daneben. */
+:root {
+  --bg:        #F4F7F5;
+  --surface:   #FFFFFF;
+  --ink:       #14231C;
+  --muted:     #56685F;
+  --line:      #D9E3DD;
+  --green:     #2D6A4F;
+  --green-ink: #FFFFFF;
+  --sage:      #95D5B2;
+  --pale:      #E3F1E9;
+  --amber:     #E9A23B;
+  --danger:    #D7323F;
+  --steel-1:   #D6DCDA;
+  --steel-2:   #F0F3F2;
+  --steel-3:   #BFC7C4;
+  --steel-line: rgb(255 255 255 / .14);
+  --steel-edge: #B3BBB8;
+  --gasket:    #98A29F;
+  /* Familienchat */
+  --chat-head: #1F3B33; --chat-bg: #EFE9E0; --chat-in: #FFFFFF; --chat-out: #DCF5D0;
+  --chat-text: #111B21; --chat-muted: #667781; --chat-dots: rgb(120 100 70 / .12);
+  /* Nestio-App (lib/theme.tsx) */
+  --app-bg: #F8F9FA; --app-surface: #FFFFFF; --app-text: #1A1A2E; --app-muted: #6B7280;
+  --app-green: #2D6A4F; --app-pale: #E8F5EE; --app-border: #E5E7EB; --app-danger: #E63946;
+  /* Zettel sind Papier, in beiden Themes gleich */
+  --note-ink:  #23302A;
+
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body:    "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-hand:    "Caveat", "Bradley Hand", "Segoe Print", cursive;
+
+  --wrap: 1160px;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1311; --surface: #161E1A; --ink: #ECF2EE; --muted: #A2B3AA; --line: #26332D;
+    --green: #5CBF90; --green-ink: #0D1311; --sage: #4E8F6E; --pale: #17271F; --amber: #F2B043;
+    --danger: #F26D6D; --steel-1: #3A4140; --steel-2: #535B5A; --steel-3: #2B302F; --steel-line: rgb(255 255 255 / .03); --steel-edge: #5C6563; --gasket: #161A19;
+    --app-bg: #0E1116; --app-surface: #1B1F26; --app-text: #F4F5F7; --app-muted: #A7AEBC; --app-green: #4FB286; --app-pale: #16241D; --app-border: #2C323B; --app-danger: #F26D6D;
+    --chat-head: #1F2C33; --chat-bg: #0B141A; --chat-in: #202C33; --chat-out: #144D37; --chat-text: #E9EDEF; --chat-muted: #8696A0; --chat-dots: rgb(255 255 255 / .04);
+   
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1311; --surface: #161E1A; --ink: #ECF2EE; --muted: #A2B3AA; --line: #26332D;
+  --green: #5CBF90; --green-ink: #0D1311; --sage: #4E8F6E; --pale: #17271F; --amber: #F2B043;
+  --danger: #F26D6D; --steel-1: #3A4140; --steel-2: #535B5A; --steel-3: #2B302F; --steel-line: rgb(255 255 255 / .03); --steel-edge: #5C6563; --gasket: #161A19;
+    --app-bg: #0E1116; --app-surface: #1B1F26; --app-text: #F4F5F7; --app-muted: #A7AEBC; --app-green: #4FB286; --app-pale: #16241D; --app-border: #2C323B; --app-danger: #F26D6D;
+    --chat-head: #1F2C33; --chat-bg: #0B141A; --chat-in: #202C33; --chat-out: #144D37; --chat-text: #E9EDEF; --chat-muted: #8696A0; --chat-dots: rgb(255 255 255 / .04);
+   
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 17px; line-height: 1.6;
+  padding-inline: 20px; overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { max-width: var(--wrap); margin-inline: auto; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.08; text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2.5rem, 6vw, 4.6rem); font-weight: 800; }
+h2 { font-size: clamp(2rem, 4.2vw, 3.1rem); font-weight: 800; }
+h3 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+p  { margin: 0; }
+.lede { font-size: 1.2rem; color: var(--muted); max-width: 34em; }
+.eyebrow {
+  font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--green);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: .55em; text-decoration: none;
+  font-weight: 700; font-size: 1rem; padding: .95em 1.4em; border-radius: 999px;
+  border: 2px solid transparent; cursor: pointer; font-family: var(--f-body);
+  transition: transform .15s ease, background-color .15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--green); color: var(--green-ink); }
+.btn-ghost { border-color: var(--line); color: var(--ink); background: transparent; }
+.btn svg { width: 20px; height: 20px; flex: none; }
+
+/* ── Nav ───────────────────────────────────────────────── */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  margin-inline: -20px; padding: 12px 20px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
+}
+.nav .wrap { display: flex; align-items: center; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--f-display); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.02em; }
+.brand img { width: 48px; height: auto; }
+.nav-links { display: flex; gap: 22px; margin-left: auto; font-weight: 600; font-size: .95rem; }
+.nav-links a { text-decoration: none; color: var(--muted); }
+.nav-links a:hover { color: var(--ink); }
+.nav .btn { padding: .6em 1.1em; font-size: .92rem; }
+/* Gemeinsame Navigation (Hauptseite und Themenseiten): auf dem Handy als Menü-Knopf */
+.nav-links a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--green); }
+.menu { display: none; position: relative; margin-left: auto; }
+.menu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary svg { width: 22px; height: 22px; }
+.menu-panel { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; min-width: 230px; display: grid; padding: 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 18px 40px -12px rgb(0 0 0 / .3); }
+.menu-panel a { text-decoration: none; font-weight: 600; padding: 10px 12px; border-radius: 10px; }
+.menu-panel a:hover, .menu-panel a[aria-current="page"] { background: var(--pale); }
+@media (max-width: 900px) { .nav-links { display: none; } .menu { display: block; } .nav .btn { margin-left: 0; } }
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero { padding-block: 64px 40px; }
+.hero .wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
+.hero-copy { display: grid; gap: 26px; min-width: 0; }
+.hero h1 em { font-style: normal; color: var(--green); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: .95rem; }
+.hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.hero-meta svg { width: 18px; height: 18px; color: var(--green); }
+.hero-visual { position: relative; justify-self: center; width: min(340px, 100%); }
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: 1fr; gap: 48px; }
+}
+
+/* Pop-outs: Ausschnitte des Startseiten-Screenshots lösen sich passgenau aus dem Bild
+   und schweben vergrößert über den Rand. --x/--y/--w/--h in % des Bildschirms. */
+.pops { position: absolute; inset: 10px; pointer-events: none; z-index: 2; }
+.pop {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%);
+  width: calc(var(--w) * 1%); height: calc(var(--h) * 1%); overflow: hidden;
+  border-radius: 14px; background: #F8F9FA;
+  box-shadow: 0 18px 36px -10px rgb(20 35 28 / .35), 0 0 0 1px rgb(20 35 28 / .06);
+  transform: translate(var(--dx), var(--dy)) scale(1.1);
+  animation: popout .9s cubic-bezier(.2,.8,.25,1.2) var(--d, .5s) backwards;
+}
+.pop img { position: absolute; max-width: none; width: calc(100% * 100 / var(--w)); height: auto; left: calc(-100% * var(--x) / var(--w)); top: calc(-100% * var(--y) / var(--h)); }
+@keyframes popout { from { transform: none; box-shadow: 0 0 0 0 transparent; } }
+@media (max-width: 600px) { .pop { transform: translate(calc(var(--dx) * .35), var(--dy)) scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .pop { animation: none; } }
+/* ── Handy mit Screenshot-Platzhalter ──────────────────── */
+.phone {
+  position: relative; width: 100%; max-width: 100%; aspect-ratio: 390 / 797;
+  border-radius: 42px; padding: 10px; background: #0F1513;
+  box-shadow: 0 30px 60px -20px rgb(20 35 28 / .35), inset 0 0 0 1.5px #3A4641;
+}
+.phone .screen {
+  width: 100%; height: 100%; border-radius: 33px; overflow: hidden; position: relative;
+  background: var(--pale); display: grid; place-items: center; text-align: center;
+}
+.phone .screen img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.shot-ph { display: grid; gap: 8px; padding: 24px; justify-items: center; color: var(--green); }
+.shot-ph svg { width: 34px; height: 34px; opacity: .8; }
+.shot-ph strong { font-family: var(--f-display); font-size: 1.15rem; color: var(--ink); }
+.shot-ph small { font-size: .78rem; color: var(--muted); letter-spacing: .04em; }
+/* Mit Screenshot: Bildschirm exakt im Bildformat (390 × 797), damit nichts beschnitten wird
+   und die Pop-outs im Hero passgenau sitzen. */
+.phone[data-shot]:has(img) { aspect-ratio: auto; }
+.phone[data-shot]:has(img) .screen { height: auto; aspect-ratio: 390 / 797; }
+.phone[data-shot]:has(img)::before { width: 10px; height: 10px; top: 16px; }
+.phone::before { /* Kamera-Notch */
+  content: ""; position: absolute; top: 20px; left: 50%; translate: -50% 0; z-index: 1;
+  width: 26%; height: 22px; background: #0F1513; border-radius: 99px;
+}
+
+/* ── Problem: der Kühlschrank ───────────────────────────── */
+/* Bühne = Container; alle Maße hängen an ihrer Breite (cqw), damit Zettel und Handy
+   auf jeder Bildschirmbreite gleich zueinander stehen. --fu = 1 % Kühlschrankbreite,
+   --pu = 1 % Handybreite. Bewusst ohne z-index am Kühlschrank: fliegende Zettel
+   müssen über das Handy kommen. */
+.problem { padding-block: 72px 56px; }
+.problem-head { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 56px; align-items: end; margin-bottom: 40px; }
+.problem-head .sec-titles { display: grid; gap: 16px; }
+.problem-head p { color: var(--muted); max-width: 34em; }
+@media (max-width: 860px) { .problem-head { grid-template-columns: 1fr; } }
+
+.stage {
+  container-type: inline-size; position: relative; width: min(1160px, 100%); margin-inline: auto;
+  aspect-ratio: 100 / 66;
+  --fw: 46; --pw: 22; --cw: 23.5;
+  --fu: calc(var(--fw) * 1cqw / 100);
+  --pu: calc(var(--pw) * 1cqw / 100);
+}
+.fridge {
+  position: absolute; left: 0; top: 0; width: calc(var(--fw) * 1cqw); aspect-ratio: 100 / 134;
+  border-radius: calc(5 * var(--fu)) calc(5 * var(--fu)) calc(2 * var(--fu)) calc(2 * var(--fu));
+  background:
+    repeating-linear-gradient(90deg, transparent 0 2px, var(--steel-line) 2px 3px),
+    linear-gradient(100deg, var(--steel-1) 0%, var(--steel-2) 38%, var(--steel-1) 62%, var(--steel-3) 100%);
+  box-shadow: inset 0 0 0 1px var(--steel-edge), 0 calc(4 * var(--fu)) calc(8 * var(--fu)) calc(-3 * var(--fu)) rgb(0 0 0 / .28);
+}
+.fridge::before { /* Lichtreflex */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 18%, rgb(255 255 255 / .28) 26%, transparent 34%, transparent 70%, rgb(255 255 255 / .14) 76%, transparent 82%);
+}
+.fridge::after { /* Fuge zwischen Gefrier- und Kühlfach */
+  content: ""; position: absolute; left: 0; right: 0; top: 27%; height: calc(1.1 * var(--fu));
+  background: var(--gasket); box-shadow: 0 1px 0 rgb(255 255 255 / .25);
+}
+.handle {
+  position: absolute; left: calc(4 * var(--fu)); width: calc(2.4 * var(--fu)); border-radius: 99px;
+  background: linear-gradient(90deg, var(--steel-3), var(--steel-2) 45%, var(--steel-3));
+  box-shadow: calc(.6 * var(--fu)) calc(.6 * var(--fu)) calc(1 * var(--fu)) rgb(0 0 0 / .25);
+}
+.handle.h1 { top: 7%; height: 16%; } .handle.h2 { top: 31%; height: 24%; }
+.floor { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--line); }
+
+/* Zettel */
+.note {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%);
+  width: calc(var(--w) * var(--fu)); color: var(--note-ink);
+  --rot: var(--r, 0deg); transform: rotate(var(--rot)); transform-origin: 50% 0;
+  box-shadow: 0 calc(.5 * var(--fu)) calc(1.2 * var(--fu)) rgb(0 0 0 / .2);
+  font-size: calc(2 * var(--fu)); line-height: 1.3;
+}
+.note.flying { z-index: 10; }
+.note.gone, .msg.gone { visibility: hidden; }
+.hand { font-family: var(--f-hand); font-weight: 700; line-height: 1.05; }
+.ink-blue { color: #22408F; } .ink-red { color: #C42A2A; }
+
+.postit { aspect-ratio: 1; padding: calc(2.4 * var(--fu)) calc(2 * var(--fu)); font-family: var(--f-hand); font-weight: 700; font-size: calc(4.4 * var(--fu)); line-height: 1.02; }
+.postit::after { content: ""; position: absolute; right: 0; bottom: 0; width: 30%; height: 18%; background: linear-gradient(160deg, transparent 50%, rgb(0 0 0 / .08)); }
+.postit.y { background: #FFE97F; } .postit.p { background: #FFC3C8; } .postit.g { background: #C5EBA8; } .postit.b { background: #BFE0FA; }
+
+.karo {
+  background-color: #FDFDFB; padding: calc(4 * var(--fu)) calc(2.6 * var(--fu)) calc(2.6 * var(--fu));
+  background-image: linear-gradient(#9DB7D9 1px, transparent 1px), linear-gradient(90deg, #9DB7D9 1px, transparent 1px);
+  background-size: calc(2.6 * var(--fu)) calc(2.6 * var(--fu));
+  clip-path: polygon(0 3%, 6% 0, 12% 2.5%, 19% .5%, 26% 3%, 33% 0, 41% 2%, 48% .5%, 56% 3%, 63% 1%, 71% 2.5%, 78% 0, 86% 2.5%, 93% .5%, 100% 2.5%, 100% 100%, 0 100%);
+  font-size: calc(3.7 * var(--fu));
+}
+.karo ul { margin: 0; padding: 0; list-style: none; }
+.karo li::before { content: "– "; }
+
+.letter { background: #FFFFFF; padding: calc(2.6 * var(--fu)); display: grid; gap: calc(1.2 * var(--fu)); }
+.letter .lh { display: flex; align-items: center; gap: calc(1 * var(--fu)); font-weight: 700; font-size: calc(1.9 * var(--fu)); color: #4A5560; }
+.letter .dot { width: calc(3 * var(--fu)); height: calc(3 * var(--fu)); border-radius: 50%; background: #F2B53C; flex: none; }
+.letter .lt { font-weight: 700; font-size: calc(2.4 * var(--fu)); color: #1E2830; }
+.letter .lines { display: grid; gap: calc(.9 * var(--fu)); }
+.letter .lines i { display: block; height: calc(.7 * var(--fu)); background: #D5DADE; border-radius: 2px; }
+.letter .lines i:nth-child(2n) { width: 82%; }
+.letter mark { background: #FFF07A; color: inherit; padding: 0 2px; }
+.letter.fold::after { /* Eselsohr */
+  content: ""; position: absolute; top: 0; right: 0; width: calc(5 * var(--fu)); height: calc(5 * var(--fu));
+  background: linear-gradient(225deg, var(--steel-2) 50%, #DCE0E3 50%);
+}
+.circled { border: 2px solid #C42A2A; border-radius: 50%; padding: 0 .3em; }
+
+.bon {
+  background: #FAF8F1; padding: calc(2.4 * var(--fu)) calc(1.8 * var(--fu)) calc(4 * var(--fu));
+  font-family: "Courier Prime", "Courier New", monospace; font-size: calc(1.7 * var(--fu)); color: #3C3C3C; line-height: 1.45;
+  clip-path: polygon(0 0, 100% 0, 100% 97%, 92% 100%, 84% 97%, 76% 100%, 68% 97%, 60% 100%, 52% 97%, 44% 100%, 36% 97%, 28% 100%, 20% 97%, 12% 100%, 4% 97%, 0 100%);
+}
+.bon .row { display: flex; justify-content: space-between; }
+.bon .scrawl { position: absolute; left: 6%; top: 38%; width: 92%; transform: rotate(-12deg); font-size: calc(3.6 * var(--fu)); }
+
+.card { background: #FFFFFF; overflow: hidden; }
+.card .band { background: #3D6FB6; color: #FFFFFF; font-weight: 700; font-size: calc(1.7 * var(--fu)); padding: calc(1 * var(--fu)) calc(1.8 * var(--fu)); }
+.card .cb { padding: calc(1.4 * var(--fu)) calc(1.8 * var(--fu)) calc(1.8 * var(--fu)); font-size: calc(1.7 * var(--fu)); color: #4A5560; }
+.card .cb .hand { font-size: calc(3.6 * var(--fu)); display: block; margin-block: calc(.4 * var(--fu)); }
+
+.plan { background: #FFFFFF; padding: calc(1.8 * var(--fu)); }
+.plan .ph { font-weight: 700; font-size: calc(1.8 * var(--fu)); color: #1E2830; margin-bottom: calc(.8 * var(--fu)); }
+.plan table { border-collapse: collapse; width: 100%; font-size: calc(1.45 * var(--fu)); color: #3C4650; }
+.plan td, .plan th { border: 1px solid #B9C1C8; padding: calc(.35 * var(--fu)) calc(.3 * var(--fu)); text-align: center; font-weight: 500; }
+.plan th { font-weight: 700; background: #EEF1F3; }
+.plan .hl { background: #FFF07A; }
+
+.invite { background: #FFE1E8; padding: calc(2.4 * var(--fu)); text-align: center; overflow: hidden; }
+.invite .balloons { display: flex; justify-content: center; gap: calc(.8 * var(--fu)); margin-bottom: calc(1 * var(--fu)); }
+.invite .balloons i { width: calc(3.4 * var(--fu)); height: calc(4.2 * var(--fu)); border-radius: 50% 50% 48% 48%; background: #E8505B; }
+.invite .balloons i:nth-child(2) { background: #3DA5D9; translate: 0 -20%; } .invite .balloons i:nth-child(3) { background: #F5B700; }
+.invite .big { font-family: var(--f-hand); font-weight: 700; font-size: calc(4.6 * var(--fu)); color: #B4234A; line-height: 1; }
+.invite small { display: block; font-size: calc(1.8 * var(--fu)); color: #6B3A48; margin-top: calc(.6 * var(--fu)); }
+
+.drawing { background: #FFFFFF; padding: calc(1 * var(--fu)); }
+.drawing svg { width: 100%; height: auto; display: block; }
+.stay-label { position: absolute; z-index: 5; left: calc(100% + 3 * var(--fu)); top: 34%; width: calc(24 * var(--fu)); transform: rotate(-4deg); font-family: var(--f-hand); font-weight: 700; font-size: calc(3.8 * var(--fu)); line-height: 1.05; color: var(--ink); opacity: 0; transition: opacity .5s; }
+.stage.done .stay-label { opacity: 1; }
+
+.tape { position: absolute; width: calc(7 * var(--fu)); height: calc(2.4 * var(--fu)); background: rgb(240 230 200 / .75); box-shadow: 0 1px 1px rgb(0 0 0 / .1); }
+.tape.tl { left: calc(-2 * var(--fu)); top: calc(-.8 * var(--fu)); transform: rotate(-35deg); }
+.tape.tr { right: calc(-2 * var(--fu)); top: calc(-.8 * var(--fu)); transform: rotate(35deg); }
+.tape.tc { left: 50%; top: calc(-1.2 * var(--fu)); translate: -50% 0; transform: rotate(-3deg); }
+
+/* Magnete bleiben an der Tür (JS setzt sie an die Oberkante ihres Zettels) */
+.magnet {
+  position: absolute; width: calc(3.6 * var(--fu)); height: calc(3.6 * var(--fu)); border-radius: 50%;
+  translate: -50% -40%; z-index: 4; background: var(--mc, #D7323F);
+  box-shadow: inset calc(-.5 * var(--fu)) calc(-.6 * var(--fu)) 0 rgb(0 0 0 / .22), inset calc(.4 * var(--fu)) calc(.4 * var(--fu)) 0 rgb(255 255 255 / .35), 0 calc(.4 * var(--fu)) calc(.6 * var(--fu)) rgb(0 0 0 / .3);
+}
+.letter-mag {
+  position: absolute; z-index: 4; font-family: var(--f-display); font-weight: 800; font-size: calc(6 * var(--fu)); line-height: 1;
+  color: var(--mc); transform: rotate(var(--r, 0deg));
+  text-shadow: calc(.25 * var(--fu)) calc(.35 * var(--fu)) 0 rgb(0 0 0 / .25), 0 calc(.6 * var(--fu)) calc(.8 * var(--fu)) rgb(0 0 0 / .2);
+}
+
+/* Handy mit Nestio-Startseite (im Stil der App) */
+.phone.app {
+  position: absolute; z-index: 2; left: 50.5cqw; top: 5cqw; width: calc(var(--pw) * 1cqw);
+  border-radius: calc(13 * var(--pu)); padding: calc(3 * var(--pu));
+}
+.phone.app::before { top: calc(5.5 * var(--pu)); height: calc(6 * var(--pu)); }
+.phone.app .screen { display: block; place-items: normal; text-align: left; background: var(--app-bg); border-radius: calc(10 * var(--pu)); padding: 0; color: var(--app-text); font-family: var(--f-body); position: relative; }
+.app-hi { font-weight: 800; font-size: calc(7.4 * var(--pu)); line-height: 1.1; font-family: var(--f-body); letter-spacing: -0.01em; }
+.app-date { font-size: calc(3.8 * var(--pu)); color: var(--app-muted); margin-bottom: calc(3 * var(--pu)); }
+.app-label { font-size: calc(2.9 * var(--pu)); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--app-muted); margin: calc(2.6 * var(--pu)) 0 calc(1.2 * var(--pu)) calc(1 * var(--pu)); }
+.app-card { background: var(--app-surface); border: 1px solid var(--app-border); border-radius: calc(4 * var(--pu)); overflow: hidden; }
+.app-row { position: relative; display: flex; align-items: center; gap: calc(2.6 * var(--pu)); padding: calc(2.1 * var(--pu)) calc(3 * var(--pu)); min-height: calc(9.2 * var(--pu)); border-top: 1px solid var(--app-border); transition: background-color .6s; }
+.app-row:first-child { border-top: 0; }
+.app-row .ic { width: calc(5.6 * var(--pu)); height: calc(5.6 * var(--pu)); flex: none; border-radius: calc(1.6 * var(--pu)); display: grid; place-items: center; background: var(--app-pale); color: var(--app-green); }
+.app-row .ic svg { width: 70%; height: 70%; }
+.app-row .ic.box { background: transparent; border: 2px solid var(--app-muted); border-radius: calc(1.4 * var(--pu)); width: calc(4.6 * var(--pu)); height: calc(4.6 * var(--pu)); }
+.app-row .ic.box.late { border-color: var(--app-danger); }
+.app-row .tx { min-width: 0; display: grid; font-size: calc(3.7 * var(--pu)); line-height: 1.2; }
+.app-row .tx b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-row .tx small { font-size: calc(3 * var(--pu)); color: var(--app-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-row .tx small.late { color: var(--app-danger); }
+.app-row .ic, .app-row .tx { transition: opacity .45s, transform .45s; }
+.app-row::after { /* Platzhalterbalken, solange die Zeile leer ist */
+  content: ""; position: absolute; left: calc(3 * var(--pu)); top: 50%; translate: 0 -50%;
+  width: 62%; height: calc(2.6 * var(--pu)); border-radius: 99px; background: var(--app-border); transition: opacity .3s;
+}
+.app-row:not(.filled) .ic, .app-row:not(.filled) .tx { opacity: 0; transform: translateX(calc(-2 * var(--pu))); }
+.app-row.filled::after { opacity: 0; }
+.app-row.flash { background: var(--app-pale); }
+.app-tabs { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; padding: calc(2.4 * var(--pu)) 0 calc(3.4 * var(--pu)); background: var(--app-surface); border-top: 1px solid var(--app-border); color: var(--app-muted); }
+.app-tabs svg { width: calc(6 * var(--pu)); height: calc(6 * var(--pu)); }
+.app-tabs svg:first-child { color: var(--app-green); }
+
+/* Handy scrollt mit, sobald mehr Zeilen da sind, als auf den Bildschirm passen */
+.app-scroll { position: absolute; left: 0; right: 0; top: 0; bottom: calc(12 * var(--pu)); overflow-y: auto; scrollbar-width: none; padding: calc(13 * var(--pu)) calc(5 * var(--pu)) calc(4 * var(--pu)); }
+.app-scroll::-webkit-scrollbar { display: none; }
+.app-row .n { display: inline-block; transition: transform .3s; }
+.app-row.bumped .n { transform: scale(1.4); color: var(--app-green); }
+
+/* Familienchat (allgemeiner Messenger-Look, bewusst ohne Marke). --cu = 1 % Chatbreite.
+   Kein overflow: hidden, damit Blasen herausfliegen können. */
+.chat {
+  position: absolute; z-index: 1; left: 76.5cqw; top: 7cqw; width: calc(var(--cw) * 1cqw); height: calc(var(--cw) * 1.95cqw);
+  --cu: calc(var(--cw) * 1cqw / 100);
+  display: flex; flex-direction: column; border-radius: calc(5 * var(--cu));
+  background: var(--chat-bg); color: var(--chat-text);
+  box-shadow: 0 calc(6 * var(--cu)) calc(12 * var(--cu)) calc(-4 * var(--cu)) rgb(0 0 0 / .3), 0 0 0 1px var(--line);
+  font-size: calc(4.1 * var(--cu) * var(--cs, 1)); line-height: 1.28;
+}
+.chat-head { display: flex; align-items: center; gap: calc(2.6 * var(--cu)); padding: calc(3.4 * var(--cu)) calc(3.4 * var(--cu)); background: var(--chat-head); color: #FFFFFF; border-radius: calc(5 * var(--cu)) calc(5 * var(--cu)) 0 0; }
+.chat-back { width: calc(6 * var(--cu)); height: calc(6 * var(--cu)); flex: none; }
+.chat-av { width: calc(9 * var(--cu)); height: calc(9 * var(--cu)); border-radius: 50%; background: #8FC9A8; color: #12352A; display: grid; place-items: center; font-weight: 800; flex: none; }
+.chat-t { display: grid; min-width: 0; line-height: 1.2; }
+.chat-t small { opacity: .75; font-size: .82em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-body {
+  flex: 1; display: flex; flex-direction: column; justify-content: safe flex-end; gap: calc(1.6 * var(--cu));
+  padding: calc(3 * var(--cu)); position: relative;
+  background-image: radial-gradient(var(--chat-dots) 1px, transparent 1.4px); background-size: calc(5 * var(--cu)) calc(5 * var(--cu));
+}
+.chat-day { align-self: center; font-size: .78em; padding: .2em .8em; border-radius: 99px; background: var(--chat-in); color: var(--chat-muted); margin-bottom: auto; }
+.msg {
+  position: relative; max-width: 88%; padding: calc(1.6 * var(--cu)) calc(2.4 * var(--cu)) calc(1.2 * var(--cu));
+  border-radius: calc(2.6 * var(--cu)); box-shadow: 0 1px 1px rgb(0 0 0 / .12); transform-origin: 50% 0;
+}
+.msg.msg-in  { align-self: flex-start; background: var(--chat-in);  border-top-left-radius: 0; }
+.msg.msg-out { align-self: flex-end;   background: var(--chat-out); border-top-right-radius: 0; }
+.msg .from { display: block; font-size: .86em; color: var(--fc); }
+.msg .meta { float: right; font-size: .72em; color: var(--chat-muted); margin: .55em 0 -.2em .9em; }
+.msg::after { content: ""; display: block; clear: both; }
+.msg.flying { z-index: 10; box-shadow: 0 18px 30px rgb(0 0 0 / .28); }
+.msg.msg-final { display: none; }
+.stage.done .msg.gone { display: none; }
+.stage.done .msg.msg-final { display: block; animation: pop .4s ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+.chat-input { margin: 0 calc(2.4 * var(--cu)) calc(2.4 * var(--cu)); padding: calc(2.2 * var(--cu)) calc(3.6 * var(--cu)); border-radius: 99px; background: var(--chat-in); color: var(--chat-muted); font-size: .9em; }
+.note.flying { box-shadow: 0 24px 40px rgb(0 0 0 / .3); }
+
+/* Steuerung unter der Bühne */
+.stage-ctrl { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: center; margin-top: 28px; text-align: center; }
+.stage-ctrl p { color: var(--muted); font-size: 1.05rem; min-width: 0; }
+.stage-ctrl .btn[disabled] { opacity: .6; cursor: default; transform: none; }
+.stage-ctrl .btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+/* Countdown bis zum automatischen Start: der Button füllt sich langsam */
+.btn.arming {
+  background-image: linear-gradient(color-mix(in srgb, var(--green-ink) 28%, transparent), color-mix(in srgb, var(--green-ink) 28%, transparent));
+  background-repeat: no-repeat; background-size: 0% 100%; animation: arm var(--hold, 4s) linear forwards;
+}
+@keyframes arm { to { background-size: 100% 100%; } }
+
+/* Schmal: Kühlschrank volle Breite und höher, Handy überlappt unten rechts */
+@media (max-width: 760px) {
+  .stage { aspect-ratio: 100 / 192; --fw: 100; --pw: 50; --cw: 50; }
+  .chat { left: 0; top: 120cqw; height: 70cqw; --cs: 1.3; }
+  .fridge { left: 0; aspect-ratio: 100 / 150; }
+  .fridge::after { top: 24%; }
+  .handle.h1 { top: 6%; height: 14%; } .handle.h2 { top: 27%; height: 20%; }
+  .phone.app { left: auto; right: -1cqw; top: 70cqw; }
+  .note, .letter-mag { left: calc(var(--nx) * 1%); top: calc(var(--ny) * 1%); }
+  .note { width: calc(var(--nw) * var(--fu)); --rot: var(--nr, var(--r, 0deg)); }
+  .note.wide-only, .letter-mag.wide-only, .msg.wide-only { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .app-row, .app-row .ic, .app-row .tx, .stay-label { transition: none; } }
+
+/* ── Abschnitte allgemein ─────────────────────────────── */
+section { scroll-margin-top: 80px; }
+.sec-head { display: grid; gap: 16px; margin-bottom: 44px; max-width: 760px; }
+.sec-head p { color: var(--muted); font-size: 1.12rem; }
+
+/* ── Zielgruppe ───────────────────────────────────────── */
+.audience { padding-block: 40px 72px; }
+.aud-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 820px) { .aud-grid { grid-template-columns: 1fr; } }
+.aud { padding: 26px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; }
+.aud .who { font-family: var(--f-hand); font-size: 1.7rem; color: var(--green); line-height: 1; }
+.aud p { color: var(--muted); }
+
+/* ── Der Morgen (Startseite & Mitnehmen) ──────────────── */
+.morning { padding-block: 80px; background: var(--green); color: var(--green-ink); margin-inline: -20px; padding-inline: 20px; }
+.morning .eyebrow { color: var(--sage); }
+:root[data-theme="dark"] .morning .eyebrow { color: var(--green-ink); }
+.morning .wrap { display: grid; grid-template-columns: 340px 1fr; gap: 64px; align-items: center; }
+.morning .phone { width: 100%; }
+.morning-copy { display: grid; gap: 26px; min-width: 0; }
+.morning-copy .lede { color: inherit; opacity: .85; }
+.pack {
+  display: grid; gap: 10px; padding: 22px; border-radius: var(--r);
+  background: color-mix(in srgb, var(--green-ink) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green-ink) 22%, transparent);
+}
+.pack-row { display: grid; grid-template-columns: 70px 1fr; gap: 12px; align-items: baseline; font-size: 1rem; }
+.pack-row b { font-family: var(--f-display); }
+.pack-head { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; opacity: .8; }
+.pack small { opacity: .75; font-size: .85rem; }
+.morning ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.morning li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; }
+.morning li svg { width: 20px; height: 20px; margin-top: 3px; }
+@media (max-width: 900px) { .morning .wrap { grid-template-columns: 1fr; } .morning .phone { max-width: 320px; margin-inline: auto; } }
+
+/* ── Widgets (Android-Startbildschirm) ────────────────── */
+/* Nachbau von widgets/*.tsx: feste helle Farben wie die echten Widget-Bitmaps,
+   unabhängig vom Theme. --hu = 1 % Bildschirmbreite des Handys. */
+.widgets { padding-block: 88px; }
+.widgets .wrap { display: grid; grid-template-columns: 1fr 360px; gap: 64px; align-items: center; }
+.w-copy { display: grid; gap: 26px; min-width: 0; }
+.w-list { display: grid; border-top: 1px solid var(--line); }
+.w-list div { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.w-list b { font-family: var(--f-display); }
+.w-list span { color: var(--muted); }
+.w-note { color: var(--muted); font-size: .95rem; }
+@media (max-width: 900px) { .widgets .wrap { grid-template-columns: 1fr; } .widgets .phone { max-width: 330px; margin-inline: auto; } }
+@media (max-width: 560px) { .w-list div { grid-template-columns: 1fr; gap: 2px; } }
+
+.phone.home { container-type: inline-size; }
+.phone.home .screen {
+  display: block; place-items: normal; text-align: left; position: relative;
+  background:
+    radial-gradient(120% 70% at 85% 10%, #6FB892 0%, transparent 55%),
+    radial-gradient(90% 60% at 10% 90%, #E9A23B 0%, transparent 50%),
+    linear-gradient(165deg, #1D4A38 0%, #2D6A4F 45%, #3E7E62 100%);
+  padding: 13cqw 4.5cqw 0; font-family: Roboto, "Segoe UI", system-ui, sans-serif;
+}
+.hs-status { position: absolute; top: 4cqw; left: 7cqw; right: 7cqw; display: flex; justify-content: space-between; color: #FFFFFF; font-size: 3.4cqw; font-weight: 500; }
+.hs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3.4cqw; }
+.wd { background: #FFFFFF; border-radius: 5cqw; color: #1A1A2E; box-shadow: 0 1.2cqw 3cqw rgb(0 0 0 / .18); min-width: 0; overflow: hidden; }
+.wd .wh { font-size: 2.8cqw; font-weight: 500; color: #2D6A4F; letter-spacing: .02em; }
+.wd .mut { color: #6B7280; }
+
+.wd-plan { grid-column: span 4; display: flex; align-items: center; gap: 3cqw; padding: 3cqw 3.6cqw; height: 19cqw; }
+.wd-plan .bar { width: 1.3cqw; align-self: stretch; border-radius: 1cqw; background: #3D6FB6; }
+.wd-plan .l1 { font-size: 4.8cqw; font-weight: 500; line-height: 1.2; }
+.wd-plan .l2 { font-size: 3.1cqw; margin-top: .6cqw; }
+
+.wd-pack { grid-column: span 4; padding: 2.6cqw 3.6cqw 3cqw; display: grid; gap: 1.3cqw; }
+.wd-pack .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .4cqw; }
+.wd-pack .top .wh { font-size: 3.3cqw; }
+.wd-pack .top .mut { font-size: 2.8cqw; }
+.wd-pack .row { display: grid; grid-template-columns: 13cqw minmax(0, 1fr) auto; gap: 1.6cqw; font-size: 3.3cqw; align-items: center; }
+.wd-pack .row b { font-weight: 500; }
+.wd-pack .row > span:first-of-type { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.wd-pack .row .mut { font-size: 2.8cqw; }
+
+.wd-today { grid-column: span 2; padding: 4cqw; display: flex; flex-direction: column; justify-content: space-between; gap: 2cqw; height: 40cqw; }
+.wd-today .ln { font-size: 3.4cqw; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wd-shop { grid-column: span 2; grid-row: span 2; padding: 3.6cqw; display: flex; flex-direction: column; }
+.wd-shop .top { display: flex; justify-content: space-between; margin-bottom: 1.4cqw; }
+.wd-shop .top .mut { font-size: 3cqw; }
+.wd-shop button {
+  all: unset; cursor: pointer; display: flex; align-items: center; gap: 2.4cqw; padding: 1.3cqw 0;
+  font-size: 3.7cqw; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 1.4cqw;
+}
+.wd-shop button:focus-visible { outline: 2px solid #E9A23B; }
+.wd-shop button i { font-style: normal; color: #2D6A4F; font-size: 4cqw; width: 4cqw; flex: none; }
+.wd-shop button.done span { text-decoration: line-through; color: #6B7280; }
+.wd-shop .more { font-size: 3cqw; margin-top: 1cqw; }
+
+.hs-apps { grid-column: span 2; display: flex; justify-content: space-around; align-items: flex-start; padding-top: 2cqw; }
+.hs-app { display: grid; justify-items: center; gap: 1.2cqw; color: #FFFFFF; font-size: 2.8cqw; }
+.hs-app span { width: 13cqw; height: 13cqw; border-radius: 50%; background: #FFFFFF; display: grid; place-items: center; overflow: hidden; }
+.hs-app span img { width: 92%; }
+.hs-app span svg { width: 55%; height: 55%; color: #2D6A4F; }
+.hs-dock { position: absolute; left: 6cqw; right: 6cqw; bottom: 6cqw; display: flex; justify-content: space-around; padding: 2.4cqw; border-radius: 99px; background: rgb(255 255 255 / .22); }
+.hs-dock span { width: 11cqw; height: 11cqw; border-radius: 50%; background: rgb(255 255 255 / .85); }
+
+/* ── Kapitel (Haushalt, Essen, Kinder, Organisation) ──── */
+.chapter { padding-block: 88px; border-top: 1px solid var(--line); }
+.chapter .wrap { display: grid; grid-template-columns: 1fr 300px; gap: 64px; align-items: start; }
+.chapter.flip .wrap { grid-template-columns: 300px 1fr; }
+.chapter.flip .ch-shots { order: -1; }
+.ch-body { display: grid; gap: 36px; min-width: 0; }
+.ch-shots { display: grid; gap: 22px; position: sticky; top: 100px; }
+.ch-shots figcaption { font-size: .85rem; color: var(--muted); text-align: center; margin-top: 10px; }
+.ch-shots figure { margin: 0; }
+.more-link { justify-self: start; font-weight: 700; color: var(--green); text-decoration: none; border-bottom: 2px solid var(--sage); padding-bottom: 2px; }
+.more-link::after { content: " →"; }
+.more-link:hover { border-bottom-color: var(--green); }
+.ch-num { font-family: var(--f-display); font-weight: 800; color: var(--green); }
+.features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+.feat { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.feat-title { display: flex; align-items: center; gap: 10px; }
+.feat-ico { width: 40px; height: 40px; border-radius: 12px; background: var(--pale); color: var(--green); display: grid; place-items: center; flex: none; }
+.feat-ico svg { width: 22px; height: 22px; }
+.feat p { color: var(--muted); font-size: 1rem; }
+.feat ul { margin: 4px 0 0; padding-left: 1.1em; color: var(--muted); font-size: .96rem; display: grid; gap: 4px; }
+.feat ul li::marker { color: var(--green); }
+.pain { font-family: var(--f-hand); font-size: 1.5rem; color: var(--danger); line-height: 1.15; }
+.pain::before { content: "„"; } .pain::after { content: "“"; }
+@media (max-width: 960px) {
+  .chapter .wrap, .chapter.flip .wrap { grid-template-columns: 1fr; gap: 40px; }
+  .chapter.flip .ch-shots { order: 0; }
+  .ch-shots { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; }
+}
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+@media (max-width: 420px) { .ch-shots { grid-template-columns: 1fr; max-width: 300px; margin-inline: auto; } }
+
+/* ── Außenherum ───────────────────────────────────────── */
+.outside { padding-block: 88px; border-top: 1px solid var(--line); }
+.out-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 860px) { .out-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .out-grid { grid-template-columns: 1fr; } }
+.out { padding: 24px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; }
+.out p { color: var(--muted); font-size: .98rem; }
+
+/* ── Anpassen ─────────────────────────────────────────── */
+.yours { padding-block: 88px; border-top: 1px solid var(--line); }
+.yours .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.yours-list { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.yours-list div { display: grid; grid-template-columns: 180px 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.yours-list b { font-family: var(--f-display); }
+.yours-list span { color: var(--muted); }
+@media (max-width: 860px) { .yours .wrap { grid-template-columns: 1fr; } .yours-list div { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ── FAQ ──────────────────────────────────────────────── */
+.faq { padding-block: 88px; border-top: 1px solid var(--line); }
+.faq .wrap { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; }
+@media (max-width: 860px) { .faq .wrap { grid-template-columns: 1fr; gap: 28px; } }
+details { border-bottom: 1px solid var(--line); padding: 18px 0; }
+details:first-of-type { border-top: 1px solid var(--line); }
+summary { cursor: pointer; font-weight: 700; font-size: 1.08rem; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font-family: var(--f-display); font-size: 1.5rem; line-height: 1; color: var(--green); transition: transform .2s; }
+details[open] summary::after { transform: rotate(45deg); }
+details p { color: var(--muted); margin-top: 10px; max-width: 40em; }
+
+/* ── Schluss ──────────────────────────────────────────── */
+.final { padding-block: 96px; text-align: center; }
+.final .wrap { display: grid; gap: 24px; justify-items: center; }
+.final img { width: 140px; }
+.final .lede { margin-inline: auto; }
+footer { padding-block: 32px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<!-- Icon-Sprites (Tabler-Icons, wie in der App) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3l8 -8"/><path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/></symbol>
+    <symbol id="i-spray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10m0 2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2z"/><path d="M6 10v-4a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v4"/><path d="M15 7h.01"/><path d="M18 9h.01"/><path d="M18 5h.01"/><path d="M21 3h.01"/><path d="M21 7h.01"/><path d="M21 11h.01"/><path d="M10 7h1"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5"/><path d="M12 12l8 -4.5"/><path d="M12 12l0 9"/><path d="M12 12l-8 -4.5"/></symbol>
+    <symbol id="i-euro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M9 17h6"/><path d="M9 13h6"/></symbol>
+    <symbol id="i-chef" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.918 0 3.52 1.35 3.91 3.151a4 4 0 0 1 2.09 7.723l0 7.126h-12v-7.126a4 4 0 1 1 2.092 -7.723a4 4 0 0 1 3.908 -3.151z"/><path d="M6.161 17.009l11.839 -.009"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></symbol>
+    <symbol id="i-calev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3l0 4"/><path d="M8 3l0 4"/><path d="M4 11l16 0"/><path d="M8 15h2v2h-2z"/></symbol>
+    <symbol id="i-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 9l-10 -4l-10 4l10 4l10 -4v6"/><path d="M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5 -1.5l1.5 -4l4 -4"/><path d="M9 15l-4.5 4.5"/><path d="M14.5 4l5.5 5.5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z"/><path d="M12 8l0 13"/><path d="M19 12v7a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0 -5a4.8 8 0 0 1 4.5 5a4.8 8 0 0 1 4.5 -5a2.5 2.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/></symbol>
+    <symbol id="i-stars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z"/><path d="M6.2 19.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z"/><path d="M12 9.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/><path d="M3 12h4l2 -3l3 6l2 -3h4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-8z"/><path d="M9 6v-1a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v1"/><path d="M8 10h8"/><path d="M8 18v-4h8v4"/></symbol>
+    <symbol id="i-widget" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6h-6z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6h-6z"/><path d="M14 14h6v6h-6z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M8.7 10.7l6.6 -3.4"/><path d="M8.7 13.3l6.6 3.4"/></symbol>
+    <symbol id="i-tablet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1v-16z"/><path d="M11 17a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></symbol>
+    <symbol id="i-android" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l0 6"/><path d="M20 10l0 6"/><path d="M7 9h10v8a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-8a5 5 0 0 1 10 0"/><path d="M8 3l1 2"/><path d="M16 3l-1 2"/><path d="M9 18l0 3"/><path d="M15 18l0 3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="" width="46" height="34">Nestio</a>
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="#top">Start</a>
+      <a href="#widgets">Widgets</a>
+      <a href="haushalt.html">Haushalt</a>
+      <a href="essen.html">Essen</a>
+      <a href="kinder.html">Kinder</a>
+      <a href="organisation.html">Organisation</a>
+      <a href="#faq">Fragen</a>
+    </nav>
+    <details class="menu">
+      <summary aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
+      <nav class="menu-panel" aria-label="Menü">
+        <a href="#top">Start</a>
+        <a href="#widgets">Widgets</a>
+        <a href="haushalt.html">Haushalt</a>
+        <a href="essen.html">Essen</a>
+        <a href="kinder.html">Kinder</a>
+        <a href="organisation.html">Organisation</a>
+        <a href="#faq">Fragen</a>
+      </nav>
+    </details>
+    <a class="btn btn-primary" href="#download">App holen</a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ═══ Hero ═══════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="eyebrow">Die Familien-App für alle im Haushalt</span>
+      <h1>Damit nicht mehr <em>eine Person</em> an alles denken muss.</h1>
+      <p class="lede">Turnbeutel, Kita-Gebühren, Wocheneinkauf, Elternabend, Kündigungsfrist: Nestio sammelt alles, was eure Familie organisiert, an einem Ort. Und alle im Haushalt sehen dasselbe.</p>
+      <div class="cta-row" id="download">
+        <a class="btn btn-primary" href="https://github.com/LinaLarsson42/nestio-releases/releases/latest/download/Nestio.apk" data-goatcounter-click="download-apk"><svg><use href="#i-android"/></svg>Für Android laden</a>
+        <a class="btn btn-ghost" href="#problem">So funktioniert's <svg><use href="#i-arrow"/></svg></a>
+      </div>
+      <div class="hero-meta">
+        <span><svg><use href="#i-users"/></svg>Ein Haushalt, beliebig viele Mitglieder</span>
+        <span><svg><use href="#i-heart"/></svg>Kinder brauchen kein eigenes Konto</span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="phone" data-shot="home">
+        <div class="screen"><img src="assets/screens/home.webp" alt="Nestio-Startseite: Wetter für heute und morgen, Essen des Tages, fällige Aufgaben und Einkaufsliste" width="390" height="797">
+        </div>
+      </div>
+      <div class="pops" aria-hidden="true">
+        <span class="pop" style="--x:4.1;--y:10.1;--w:91.8;--h:8.6;--dx:-9%;--dy:-10%;--d:.5s"><img src="assets/screens/home.webp" alt=""></span>
+        <span class="pop" style="--x:4.3;--y:53;--w:91.4;--h:5.5;--dx:13%;--dy:0%;--d:.75s"><img src="assets/screens/home.webp" alt=""></span>
+        <span class="pop" style="--x:4.3;--y:79.5;--w:91.4;--h:6.8;--dx:-11%;--dy:8%;--d:1s"><img src="assets/screens/home.webp" alt=""></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Problem ════════════════════════════════════════════════════════ -->
+<section class="problem" id="problem">
+  <div class="wrap">
+    <div class="problem-head">
+      <div class="sec-titles">
+        <span class="eyebrow">Kennt ihr das?</span>
+        <h2>Euer Familienalltag hängt am Kühlschrank. Und im Familienchat.</h2>
+      </div>
+      <p>Ein Zettel für den Einkauf, der Elternbrief, die Terminkarte vom Kinderarzt. Dazu ein Chat voller „Haben wir noch Milch?“ und „Denkst du an den Elternabend?“. Und ein Kopf, der alles zusammenhält. Meistens immer derselbe. Nestio macht daraus einen gemeinsamen Ort, den alle im Haushalt sehen.</p>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="fridge" id="fridge" role="img" aria-label="Kühlschranktür voller Zettel: Einkaufsliste, Elternbrief, Terminkarte, Kassenbon mit Notiz, Stundenplan, Einladung, Vertragsbrief und Post-its">
+        <span class="handle h1" aria-hidden="true"></span>
+        <span class="handle h2" aria-hidden="true"></span>
+
+        <!-- Gefrierfach -->
+        <div class="note invite" data-to="r-paul" data-order="9"
+             style="--x:8;--y:4;--w:21;--r:-4deg;--nx:3;--ny:2;--nw:24;--nr:-4deg">
+          <span class="tape tc"></span>
+          <div class="balloons"><i></i><i></i><i></i></div>
+          <span class="big">Paul wird 5!</span>
+          <small>Samstag, 15 Uhr · Kita-Party</small>
+        </div>
+        <div class="note postit b" data-to="r-oma" data-order="7"
+             style="--x:35;--y:5;--w:20;--r:4deg;--nx:30;--ny:3;--nw:22;--nr:4deg">Oma wird 70!! Sa.<br>Geschenk?</div>
+        <div class="note card" data-to="r-u8" data-order="4" data-mag="#3D6FB6"
+             style="--x:61;--y:4;--w:31;--r:-3deg;--nx:56;--ny:2;--nw:40;--nr:-3deg">
+          <div class="band">Kinderarztpraxis Dr. Berg</div>
+          <div class="cb">Ihr nächster Termin:<span class="hand ink-blue">Do, 9:30 · U8 Ben</span>Bitte U-Heft mitbringen</div>
+        </div>
+
+        <!-- Kühlfach -->
+        <div class="note drawing stays" style="--x:9;--y:31;--w:36;--r:-2deg;--nx:4;--ny:26;--nw:40;--nr:-2deg">
+          <span class="tape tl"></span><span class="tape tr"></span>
+          <svg viewBox="0 0 200 150" aria-hidden="true">
+            <defs><filter id="crayon"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/></filter></defs>
+            <g filter="url(#crayon)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2">
+              <circle cx="172" cy="26" r="13" stroke="#F5B700" fill="#FFE066"/>
+              <path d="M172 6v-4M190 26h5M186 12l4-4M186 40l4 4M154 12l-4-4" stroke="#F5B700"/>
+              <path d="M18 70l38-32l38 32" stroke="#D7323F"/>
+              <path d="M26 66v48h60v-48" stroke="#3D6FB6"/>
+              <path d="M48 114v-22h16v22" stroke="#8A5A2B"/>
+              <path d="M2 120c20-4 40 4 60 0s40-4 60 0s50 3 76 0" stroke="#3FA34D"/>
+              <g stroke="#1E2830" stroke-width="2.6">
+                <circle cx="112" cy="70" r="7"/><path d="M112 77v20M112 84l-9 6M112 84l9 6M112 97l-7 15M112 97l7 15"/>
+                <circle cx="136" cy="72" r="7"/><path d="M136 79v19M136 86l-9 5M136 86l9 5M136 98l-7 14M136 98l7 14"/>
+                <circle cx="157" cy="88" r="5"/><path d="M157 93v12M157 97l-6 4M157 97l6 4M157 105l-5 8M157 105l5 8"/>
+                <circle cx="175" cy="92" r="4.5"/><path d="M175 97v10M175 100l-5 3M175 100l5 3M175 107l-4 6M175 107l4 6"/>
+              </g>
+              <path d="M104 64c4-6 12-6 16 0M128 66c4-6 12-6 16 0" stroke="#8A5A2B" stroke-width="2.4"/>
+              <path d="M152 88l10 0M150 86c3-5 11-5 14 0" stroke="#E8505B" stroke-width="2.4"/>
+            </g>
+            <text x="16" y="144" font-family="Caveat, cursive" font-size="17" fill="#3D6FB6" font-weight="700">BEN</text>
+          </svg>
+          <span class="stay-label">Das bleibt natürlich hängen.</span>
+        </div>
+        <div class="note letter fold" data-to="r-laterne" data-order="10" data-mag="#F2B53C"
+             style="--x:54;--y:30;--w:34;--r:2deg;--nx:50;--ny:23;--nw:46;--nr:2deg">
+          <div class="lh"><span class="dot"></span>Kita Sonnenschein</div>
+          <div class="lt">Elternbrief: Laternenfest</div>
+          <div class="lines"><i></i><i></i></div>
+          <div>Am <mark>11.11. um 17 Uhr</mark> ziehen wir los. Bitte eine Laterne mitbringen!</div>
+          <div class="lines"><i></i><i></i></div>
+        </div>
+        <div class="note postit y" data-to="r-turnbeutel" data-order="1"
+             style="--x:34;--y:47;--w:21;--r:-5deg;--nx:26;--ny:45;--nw:24;--nr:-5deg">Turnbeutel!!!<br>Di + Do</div>
+        <div class="note karo" data-to="r-einkauf" data-order="2" data-mag="#2D6A4F"
+             style="--x:8;--y:56;--w:25;--r:3deg;--nx:3;--ny:53;--nw:28;--nr:3deg">
+          <ul class="hand ink-blue"><li>Milch</li><li>Eier</li><li>Kürbis</li><li>Haferflocken</li><li><s>Zahnpasta</s></li></ul>
+        </div>
+        <div class="note bon wide-only" data-to="r-kita" data-order="3" data-mag="#D7323F"
+             style="--x:60;--y:53;--w:17;--r:4deg">
+          <div style="text-align:center;font-weight:700">SUPERMARKT</div>
+          <div class="row"><span>Bananen</span><span>1,79</span></div>
+          <div class="row"><span>Vollmilch</span><span>1,19</span></div>
+          <div class="row"><span>Brot</span><span>2,49</span></div>
+          <div class="row"><span>Kaffee</span><span>6,99</span></div>
+          <div class="row"><span>Butter</span><span>2,29</span></div>
+          <div class="row" style="font-weight:700"><span>SUMME</span><span>14,75</span></div>
+          <span class="scrawl hand ink-red">Kita-Gebühren überweisen!!</span>
+        </div>
+        <div class="note plan wide-only" data-to="r-schule" data-order="6" data-mag="#7B4FB0"
+             style="--x:76;--y:62;--w:22;--r:-3deg">
+          <div class="ph">Klasse 2b · Mila</div>
+          <table><tr><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr>
+            <tr><td>De</td><td>Ma</td><td>Mu</td><td>Ma</td><td>De</td></tr>
+            <tr><td>Ma</td><td class="hl">Sp</td><td>Ku</td><td class="hl">Sp</td><td>Sa</td></tr>
+            <tr><td>Mu</td><td>De</td><td>Ma</td><td>De</td><td>Re</td></tr></table>
+        </div>
+        <div class="note letter wide-only" data-to="r-vertrag" data-order="8" data-mag="#3FA34D"
+             style="--x:38;--y:67;--w:33;--r:-2deg;--nx:6;--ny:76;--nw:42;--nr:-2deg">
+          <div class="lh"><span class="dot" style="background:#9AA3AD"></span>Mobilfunk-Service</div>
+          <div class="lt">Ihre Vertragsverlängerung</div>
+          <div>Ihr Vertrag verlängert sich um 12 Monate, wenn Sie nicht bis zum <span class="circled">15.10.</span> kündigen.</div>
+          <div class="lines"><i></i><i></i></div>
+          <span class="hand ink-red" style="font-size:calc(3.8 * var(--fu))">Frist?! kündigen!!</span>
+        </div>
+        <div class="note postit p" data-to="r-essen" data-order="5"
+             style="--x:9;--y:80;--w:20;--r:3deg;--nx:31;--ny:61;--nw:20;--nr:3deg">Was essen wir heute??</div>
+        <div class="note postit g wide-only" data-to="r-bad" data-order="11"
+             style="--x:73;--y:81;--w:20;--r:-4deg">Bad putzen: wer ist dran?</div>
+
+        <span class="letter-mag wide-only" style="--x:36;--y:93;--mc:#D7323F;--r:-8deg;left:36%;top:92%">A</span>
+        <span class="letter-mag wide-only" style="--mc:#3D6FB6;--r:6deg;left:43%;top:93%">B</span>
+        <span class="letter-mag wide-only" style="--mc:#F5B700;--r:-4deg;left:50%;top:91.5%">C</span>
+      </div>
+
+      <div class="phone app" aria-label="Nestio-Startseite, die sich mit Zetteln und Nachrichten füllt">
+        <div class="screen">
+          <div class="app-scroll" id="app-scroll">
+            <div class="app-hi">Guten Tag, Lina</div>
+            <div class="app-date">Dienstag, 6. Oktober</div>
+
+            <div class="app-label">Mitnehmen</div>
+            <div class="app-card">
+              <div class="app-row" id="r-turnbeutel"><span class="ic"><svg><use href="#i-bag"/></svg></span><span class="tx"><b>Mila · Turnbeutel</b><small>Sport am Dienstag</small></span></div>
+              <div class="app-row" id="r-matsch"><span class="ic"><svg><use href="#i-bag"/></svg></span><span class="tx"><b>Ben · Matschhose</b><small>Waldtag in der Kita</small></span></div>
+            </div>
+
+            <div class="app-label">Heute</div>
+            <div class="app-card">
+              <div class="app-row" id="r-schule"><span class="ic"><svg><use href="#i-school"/></svg></span><span class="tx"><b>Schule 8:00–13:05</b><small>Mila · Klasse 2b</small></span></div>
+              <div class="app-row" id="r-essen"><span class="ic"><svg><use href="#i-chef"/></svg></span><span class="tx"><b>Kürbissuppe</b><small>Abendessen</small></span></div>
+              <div class="app-row" id="r-kita"><span class="ic box late"></span><span class="tx"><b>Kita-Gebühren überweisen</b><small class="late">überfällig seit gestern</small></span></div>
+              <div class="app-row" id="r-bad"><span class="ic box"></span><span class="tx"><b>Bad putzen</b><small>Putzplan · Jonas</small></span></div>
+              <div class="app-row" id="r-paket"><span class="ic box"></span><span class="tx"><b>Paket bei Müllers abholen</b><small>Lina</small></span></div>
+              <div class="app-row" id="r-einkauf"><span class="ic"><svg><use href="#i-cart"/></svg></span><span class="tx"><b><span class="n" data-base="4">4</span> Artikel auf der Einkaufsliste</b><small>Milch, Eier, Kürbis …</small></span></div>
+            </div>
+
+            <div class="app-label">Demnächst</div>
+            <div class="app-card">
+              <div class="app-row" id="r-elternabend"><span class="ic"><svg><use href="#i-calev"/></svg></span><span class="tx"><b>Elternabend 2b · 19:30</b><small>Do · Lina &amp; Jonas</small></span></div>
+              <div class="app-row" id="r-u8"><span class="ic"><svg><use href="#i-heart"/></svg></span><span class="tx"><b>U8 Ben · 9:30</b><small>Do · U-Heft mitnehmen</small></span></div>
+              <div class="app-row" id="r-oma"><span class="ic"><svg><use href="#i-gift"/></svg></span><span class="tx"><b>Oma Ingrid wird 70</b><small>Sa · Geschenkidee notiert</small></span></div>
+              <div class="app-row" id="r-paul"><span class="ic"><svg><use href="#i-gift"/></svg></span><span class="tx"><b>Paul wird 5</b><small>Sa, 15 Uhr · Kita-Party</small></span></div>
+              <div class="app-row" id="r-kaffee"><span class="ic"><svg><use href="#i-users"/></svg></span><span class="tx"><b>Kaffee bei Oma</b><small>So, 15 Uhr · alle</small></span></div>
+              <div class="app-row" id="r-vertrag"><span class="ic"><svg><use href="#i-file"/></svg></span><span class="tx"><b>Handyvertrag kündigen</b><small>Frist 15.10. · noch 9 Tage</small></span></div>
+              <div class="app-row" id="r-laterne"><span class="ic"><svg><use href="#i-calev"/></svg></span><span class="tx"><b>Laternenumzug</b><small>11.11. · Laterne mitbringen</small></span></div>
+            </div>
+          </div>
+
+          <div class="app-tabs" aria-hidden="true">
+            <svg><use href="#i-home"/></svg><svg><use href="#i-check"/></svg><svg><use href="#i-cart"/></svg><svg><use href="#i-calev"/></svg><svg><use href="#i-widget"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat" aria-label="Familienchat voller Erinnerungen">
+        <div class="chat-head">
+          <svg class="chat-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg>
+          <span class="chat-av" aria-hidden="true">F</span>
+          <span class="chat-t"><b>Familie</b><small>Lina, Jonas, Oma Ingrid</small></span>
+        </div>
+        <div class="chat-body" id="chat-body">
+          <span class="chat-day">Heute</span>
+          <div class="msg msg-in" data-to="r-einkauf" data-bump="1"><b class="from" style="--fc:#1F7AE0">Jonas</b>Haben wir noch Milch? Und Kaffee ist alle!!<span class="meta">07:12</span></div>
+          <div class="msg msg-out" data-to="r-matsch">Heute ist Waldtag, Ben braucht die Matschhose!<span class="meta">07:31 ✓✓</span></div>
+          <div class="msg msg-in wide-only" data-to="r-kaffee"><b class="from" style="--fc:#C2185B">Oma Ingrid</b>Kommt ihr Sonntag zum Kaffee? Ich backe Pflaumenkuchen.<span class="meta">09:05</span></div>
+          <div class="msg msg-in wide-only" data-to="r-paket"><b class="from" style="--fc:#1F7AE0">Jonas</b>Paket liegt bei Müllers. Holst du das heute?<span class="meta">12:47</span></div>
+          <div class="msg msg-out" data-to="r-elternabend">Denkst du an den Elternabend am Donnerstag? 19:30<span class="meta">18:20 ✓✓</span></div>
+          <div class="msg msg-out wide-only" data-to="r-kita">Hast du die Kita-Gebühren schon überwiesen??<span class="meta">21:10 ✓✓</span></div>
+          <div class="msg msg-in msg-final"><b class="from" style="--fc:#1F7AE0">Jonas</b>Steht jetzt alles in Nestio. Danke dir!<span class="meta">21:14</span></div>
+        </div>
+        <div class="chat-input" aria-hidden="true"><span>Nachricht</span></div>
+      </div>
+      <span class="floor" aria-hidden="true"></span>
+    </div>
+
+    <div class="stage-ctrl">
+      <p id="stage-cap" aria-live="polite">Ein Kühlschrank voller Zettel, ein Familienchat voller „Denkst du dran?“ und ein Kopf, der alles zusammenhalten muss.</p>
+      <div class="btns">
+        <button class="btn btn-primary" id="tidy" type="button">Mit Nestio aufräumen</button>
+        <button class="btn btn-ghost" id="untidy" type="button" hidden>Zurücksetzen</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Zielgruppe ════════════════════════════════════════════════════ -->
+<section class="audience">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Für wen Nestio gemacht ist</span>
+      <h2>Für Familien, in denen viel los ist.</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud">
+        <span class="who">Eltern mit Kita- und Schulkindern</span>
+        <p>Bringen, Abholen, Stundenplan, Hort, Elternabende, U-Termine. Nestio kennt den Takt eurer Woche und sagt euch jeden Morgen, was ansteht und was mit muss.</p>
+      </div>
+      <div class="aud">
+        <span class="who">Paare, die fair teilen wollen</span>
+        <p>Aufgaben haben eine zuständige Person, der Putzplan einen Rhythmus, die Einkaufsliste wird gemeinsam geführt. Was zu tun ist, steht in der App und nicht nur in einem Kopf.</p>
+      </div>
+      <div class="aud">
+        <span class="who">Alle, die den Überblick behalten müssen</span>
+        <p>Verträge, Kündigungsfristen, Versicherungen, Haushaltsbudget, wichtige Dokumente. Der Papierkram der Familie liegt geordnet an derselben Stelle wie der Alltag.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Der Morgen ════════════════════════════════════════════════════ -->
+<section class="morning" id="morgen">
+  <div class="wrap">
+    <div class="phone" data-shot="home-packing">
+      <div class="screen"><img src="assets/screens/home-packing.webp" alt="Nestio-Startseite mit geöffnetem „Heute mitnehmen“: Regenschirm für Lina, Lesebuch, Rechenheft, Turnbeutel und Bibliotheksbuch für Mila, Matschhose für Ben, mit Abholzeiten" width="390" height="797" loading="lazy">
+      </div>
+    </div>
+    <div class="morning-copy">
+      <span class="eyebrow">Startseite &amp; Mitnehmen</span>
+      <h2>Ein Blick am Morgen, und alle wissen Bescheid.</h2>
+      <p class="lede">Die Startseite zeigt unter „Heute“, was wirklich ansteht: Essen, Termine, fällige Aufgaben zum direkten Abhaken und die Einkaufsliste. Darunter kommen als Zeitleiste die nächsten Tage.</p>
+
+      <div class="pack" aria-label="Beispiel: Mitnehmen-Liste">
+        <span class="pack-head">Beispiel · Mitnehmen heute</span>
+        <div class="pack-row"><b>Mila</b><span>Turnbeutel, Lesebuch, Bibliotheksbuch <small>· Sport am Dienstag, Hort bis 16:00</small></span></div>
+        <div class="pack-row"><b>Ben</b><span>Matschhose &amp; Gummistiefel, Spielzeug <small>· Regen 80 %, Dauerregel</small></span></div>
+        <div class="pack-row"><b>Lina</b><span>Regenschirm <small>· Regen ab 14 Uhr</small></span></div>
+      </div>
+
+      <ul>
+        <li><svg><use href="#i-sun"/></svg><span><b>Nach Wetter, Stundenplan und Kalender.</b> Regen gemeldet? Die Regenjacke steht drauf. Sport am Dienstag? Der Turnbeutel auch. Ein Termin beim Kinderarzt? Dann das U-Heft.</span></li>
+        <li><svg><use href="#i-bag"/></svg><span><b>Eigene Dauerregeln.</b> „Jeden 1. Montag im Monat: Spielzeug für die Kita“. Einmal einstellen, nie wieder dran denken.</span></li>
+        <li><svg><use href="#i-calev"/></svg><span><b>Ab 18 Uhr gilt die Liste für morgen.</b> So packt ihr abends in Ruhe statt morgens in Hektik.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Widgets ═══════════════════════════════════════════════════════ -->
+<section class="widgets" id="widgets">
+  <div class="wrap">
+    <div class="w-copy">
+      <span class="eyebrow">Widgets für Android</span>
+      <h2>Alles im Blick, ohne die App zu öffnen.</h2>
+      <p class="lede">Ein Blick auf den Startbildschirm reicht: was heute mit muss, welche Stunde gerade läuft, was auf die Einkaufsliste gehört. Jedes Widget lässt sich größer ziehen und zeigt dann mehr.</p>
+      <div class="w-list">
+        <div><b>Mitnehmen</b><span>Wetter und eine Zeile pro Person, samt Abholzeit. Ab 18 Uhr schon für morgen.</span></div>
+        <div><b>Stundenplan</b><span>Was gerade dran ist und was danach kommt, in der Farbe des Fachs. Wechselt von selbst zum Stundenwechsel, größer gezogen mit den nächsten Stunden.</span></div>
+        <div><b>Einkaufsliste</b><span>Die offenen Artikel. Abgehakt wird direkt im Widget, ohne die App zu öffnen.</span></div>
+        <div><b>Heute</b><span>Offene Aufgaben, Artikel im Einkauf und das Essen des Tages.</span></div>
+      </div>
+      <p class="w-note">Probiert es aus: Tippt im Einkaufs-Widget auf einen Artikel.</p>
+    </div>
+
+    <div class="phone home" role="group" aria-label="Android-Startbildschirm mit den vier Nestio-Widgets">
+      <div class="screen">
+        <div class="hs-status" aria-hidden="true"><span>9:20</span><span>Di., 6. Okt.</span></div>
+        <div class="hs-grid">
+          <div class="wd wd-plan">
+            <span class="bar"></span>
+            <div><div class="l1">Mathe · R 104</div><div class="l2 mut">bis 9:35 · dann Pause</div></div>
+          </div>
+          <div class="wd wd-pack">
+            <div class="top"><span class="wh">Heute mitnehmen</span><span class="mut">14–18° · Regen ab 14 Uhr</span></div>
+            <div class="row"><b>Mila</b><span>Turnbeutel, Flöte, Regenjacke</span><span class="mut">abholen 16:00</span></div>
+            <div class="row"><b>Ben</b><span>Matschhose</span><span class="mut">abholen 15:30</span></div>
+            <div class="row"><b>Lina</b><span>Schirm</span><span></span></div>
+          </div>
+          <div class="wd wd-today">
+            <span class="wh">NESTIO · HEUTE</span>
+            <span class="ln">✓&nbsp; 3 Aufgaben offen</span>
+            <span class="ln">🛒&nbsp; <span id="wd-count2">6</span> im Einkauf</span>
+            <span class="ln">🍽&nbsp; Kürbissuppe</span>
+          </div>
+          <div class="wd wd-shop">
+            <div class="top"><span class="wh">NESTIO · EINKAUF</span><span class="mut" id="wd-count">6</span></div>
+            <div id="wd-items"></div>
+            <span class="more mut" id="wd-more"></span>
+          </div>
+          <div class="hs-apps">
+            <span class="hs-app"><span><img src="assets/logo.png" alt=""></span>Nestio</span>
+            <span class="hs-app"><span><svg><use href="#i-calev"/></svg></span>Kalender</span>
+          </div>
+        </div>
+        <div class="hs-dock" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Haushalt ══════════════════════════════════════════════════════ -->
+<section class="chapter" id="haushalt">
+  <div class="wrap">
+    <div class="ch-body">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow">Haushalt</span>
+        <h2>Aufgaben verteilen, statt sie zu tragen.</h2>
+        <p>Vom Müll bis zum Umzugsprojekt, vom Wocheneinkauf bis zur Kfz-Versicherung. Alles mit klarer Zuständigkeit und Erinnerung, bevor es zu spät ist.</p>
+        <a class="more-link" href="haushalt.html">Mehr zum Haushalt</a>
+      </div>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-check"/></svg></span><h3>Aufgaben</h3></div>
+          <span class="pain">Hast du dran gedacht?</span>
+          <p>Einzelne Aufgaben oder kleine Projekte mit Teilaufgaben, jede mit eigenem Datum und eigener Person.</p>
+          <ul>
+            <li>„Heute“ zeigt Aufgaben und Teilaufgaben aus allen Projekten nebeneinander</li>
+            <li>Liegengebliebenes rutscht mit „Übernommen vom …“ nach, statt zu verschwinden</li>
+            <li>Wiederkehrend: täglich, wöchentlich, monatlich oder im eigenen Rhythmus</li>
+            <li>Vorlagen für Kindergeburtstag, Urlaub oder Frühjahrsputz: Datum setzen, fertig</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-cart"/></svg></span><h3>Listen</h3></div>
+          <span class="pain">Ich hab doch Milch geschrieben!</span>
+          <p>Eine gemeinsame Einkaufsliste, die sich nach Kategorien sortiert, damit ihr im Laden nicht hin und her lauft.</p>
+          <ul>
+            <li>Mehrere Listen, etwa Supermarkt und Drogerie</li>
+            <li>Wunschlisten, die einer Person gehören</li>
+            <li>Alle sehen live, was dazukommt und abgehakt wird</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-spray"/></svg></span><h3>Putzplan</h3></div>
+          <p>Wiederkehrende Hausarbeit mit Raum, Rhythmus und fester Zuständigkeit. Was heute dran ist, steht auf der Startseite und lässt sich dort abhaken.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-box"/></svg></span><h3>Vorräte</h3></div>
+          <p>Kühlschrank, Tiefkühler und Vorratsschrank mit Mengen und Mindesthaltbarkeit.</p>
+          <ul>
+            <li>Was zur Neige geht, landet auf Wunsch automatisch auf der Einkaufsliste</li>
+            <li>Erinnerung, bevor etwas abläuft</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-euro"/></svg></span><h3>Finanzen</h3></div>
+          <span class="pain">Wo geht das ganze Geld hin?</span>
+          <p>Eine Haushaltsplanung statt eines Kassenbuchs: wiederkehrende Einnahmen und Ausgaben, auf den Monat umgerechnet.</p>
+          <ul>
+            <li>Werte-Historie, wenn sich Beträge ändern</li>
+            <li>Szenarien durchspielen, etwa Elternzeit oder Teilzeit</li>
+            <li>Überschuss pro Monat und seine Entwicklung als Diagramm</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-file"/></svg></span><h3>Verträge &amp; Objekte</h3></div>
+          <span class="pain">Die Frist war letzte Woche.</span>
+          <p>Versicherungen, Abos, Miete, Strom und Handy mit Vertragsnummern, Anbieterkontakt, Beitragshistorie und Schadensfällen.</p>
+          <ul>
+            <li>Nestio berechnet Kündigungsfristen und meldet sich rechtzeitig</li>
+            <li>Objekte wie Auto, Wohnung oder Haustier bündeln alle Verträge und Kosten dazu</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="ch-shots">
+      <figure>
+        <div class="phone" data-shot="tasks"><div class="screen"><img src="assets/screens/tasks.webp" alt="Aufgaben in Nestio: übernommene und heute fällige Aufgaben mit zuständiger Person" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Aufgaben: Übernommenes und Heute</figcaption>
+      </figure>
+      <figure>
+        <div class="phone" data-shot="lists"><div class="screen"><img src="assets/screens/lists.webp" alt="Gemeinsame Einkaufsliste in Nestio, nach Kategorien sortiert, mit Angabe, wer was eingetragen hat" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Einkaufsliste nach Kategorien</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Essen ═════════════════════════════════════════════════════════ -->
+<section class="chapter flip" id="essen">
+  <div class="wrap">
+    <div class="ch-body">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow">Essen</span>
+        <h2>Nie wieder „Was essen wir heute?“ um 17:30 Uhr.</h2>
+        <p>Rezepte sammeln, die Woche planen, und was fehlt, wandert direkt auf die Einkaufsliste.</p>
+        <a class="more-link" href="essen.html">Mehr zum Essen</a>
+      </div>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-chef"/></svg></span><h3>Rezepte</h3></div>
+          <p>Eure Familienrezepte an einem Ort, ob abgetippt, aus dem Netz oder vom Kochbuch abfotografiert.</p>
+          <ul>
+            <li>Link aus dem Browser über „Teilen → Nestio“ übernehmen</li>
+            <li>Foto vom Kochbuch: Nestio liest Zutaten und Schritte aus, auch über mehrere Seiten</li>
+            <li>Suche nach mehreren Zutaten: „Reis, Paprika“ zeigt auch, was noch fehlt</li>
+            <li>Tags wie „Schnell“ oder „Kinder-Hit“, Favoriten pro Person</li>
+            <li>Kochmodus Schritt für Schritt, der Bildschirm bleibt an</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-cal"/></svg></span><h3>Essensplan</h3></div>
+          <p>Frühstück, Mittag und Abendessen für die ganze Woche, mit Rezept oder als Freitext wie „Pizza-Abend“.</p>
+          <ul>
+            <li>„Woche füllen“ würfelt leere Tage aus euren Rezepten, ohne Wiederholungen</li>
+            <li>Fehlende Zutaten mit einem Tipp auf die Einkaufsliste</li>
+            <li>Das heutige Essen steht auf der Startseite</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="ch-shots">
+      <figure>
+        <div class="phone" data-shot="meals"><div class="screen"><img src="assets/screens/meals.webp" alt="Essensplan in Nestio für die Woche mit Frühstück, Mittag- und Abendessen" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Die Woche auf einen Blick</figcaption>
+      </figure>
+      <figure>
+        <div class="phone" data-shot="recipes"><div class="screen"><img src="assets/screens/recipes.webp" alt="Rezeptsammlung in Nestio mit Suche nach Zutaten, Tags und Favoriten" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Rezepte mit Tags und Suche</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Kinder ════════════════════════════════════════════════════════ -->
+<section class="chapter" id="kinder">
+  <div class="wrap">
+    <div class="ch-body">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow">Kinder</span>
+        <h2>Weniger Antreiben, mehr Selbermachen.</h2>
+        <p>Die Kinder haken ihre Routine selbst ab, der Stundenplan denkt fürs Packen mit, und für freie Wochenenden gibt es eine Ideenliste.</p>
+        <a class="more-link" href="kinder.html">Mehr zu Kindern</a>
+      </div>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-stars"/></svg></span><h3>Routine</h3></div>
+          <span class="pain">Schuhe an! Wir müssen los!</span>
+          <p>Morgen- und Abendroutine je Kind, abgehakt von den Kindern selbst am Tablet. Ein Konto brauchen sie dafür nicht.</p>
+          <ul>
+            <li>Punkte für jede Aufgabe, Belohnungen zum Einlösen</li>
+            <li>Streaks und eine Trophäe nach sieben Tagen am Stück</li>
+            <li>Timer pro Schritt und ein Countdown bis zur Abfahrt</li>
+            <li>Der Tablet-Zugang zeigt nur die Routine und lässt sich jederzeit sperren</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-school"/></svg></span><h3>Stundenplan</h3></div>
+          <p>Der Stundenplan jedes Schulkinds, mit eigenem Zeitraster und Fächerkatalog.</p>
+          <ul>
+            <li>A/B-Wochen</li>
+            <li>„Mitbringen“ pro Fach landet morgens auf der Mitnehmen-Liste</li>
+            <li>Kernzeit oder Hort mit Abholzeit</li>
+            <li>Schulbeginn und -ende auf der Startseite</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-heart"/></svg></span><h3>Vorsorge</h3></div>
+          <p>U-Termine der Kinder und eure eigenen Vorsorgeuntersuchungen, mit Fälligkeit und Erinnerung. Gesundheitsdaten stehen im Profil jedes Familienmitglieds.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-map"/></svg></span><h3>Ausflüge</h3></div>
+          <p>Ideen fürs Wochenende sammeln, mit Ort, Link und Notiz. Wenn ihr dort wart, hakt ihr sie ab. So hat am Samstagmorgen jemand eine Antwort auf „Was machen wir heute?“.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ch-shots">
+      <figure>
+        <div class="phone" data-shot="routine"><div class="screen"><img src="assets/screens/routine.webp" alt="Kinderroutine in Nestio: Mila und Ben mit Punkten und Tagen am Stück, darunter Belohnungen mit Punktepreis" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Routine mit Punkten und Belohnungen</figcaption>
+      </figure>
+      <figure>
+        <div class="phone" data-shot="schedule"><div class="screen"><img src="assets/screens/schedule.webp" alt="Stundenplan der Klasse 2b in Nestio mit Zeitraster, Pausen und farbigen Fächern, der heutige Dienstag hervorgehoben" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Stundenplan mit Zeitraster und Fachfarben</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Organisation ══════════════════════════════════════════════════ -->
+<section class="chapter flip" id="orga">
+  <div class="wrap">
+    <div class="ch-body">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow">Organisation</span>
+        <h2>Alles, was sonst keinen festen Platz hat.</h2>
+        <p>Geburtstage, Termine, Dokumente und die Notiz, die früher an der Kühlschranktür hing.</p>
+        <a class="more-link" href="organisation.html">Mehr zur Organisation</a>
+      </div>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-gift"/></svg></span><h3>Geburtstage &amp; Geschenke</h3></div>
+          <span class="pain">Oh nein, das ist ja morgen.</span>
+          <p>Geburtstage von Familie und Freunden, auf Wunsch aus Google importiert. Eine Woche vorher erinnert Nestio.</p>
+          <ul>
+            <li>Geschenkideen pro Person, mit Preis und Link</li>
+            <li>Gekauft? Dann steht das Geschenk am Tag selbst auf der Mitnehmen-Liste</li>
+          </ul>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-calev"/></svg></span><h3>Kalender</h3></div>
+          <p>Termine aus Google Kalender, nur lesend. Ihr wählt, welche Kalender sichtbar sind. Termine mit „Mitbringen: …“ landen auf der Mitnehmen-Liste.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-folder"/></svg></span><h3>Dateien</h3></div>
+          <p>Dokumente und Fotos nach Kategorien: Impfpass, Mietvertrag, Zeugnisse. Gefunden in Sekunden statt im Aktenordner.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-pin"/></svg></span><h3>Pinnwand</h3></div>
+          <p>Notizen und Checklisten für alle, wichtige oben angepinnt. Der WLAN-Code für Gäste, die Packliste für den Urlaub, die Nummer vom Babysitter.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-users"/></svg></span><h3>Familie</h3></div>
+          <p>Alle Mitglieder des Haushalts mit Profil und Geburtstag. Partnerin oder Partner kommt per Einladungscode dazu. Kinder und Großeltern ohne eigenes Handy legt ihr als Mitglied ohne Konto an.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-title"><span class="feat-ico"><svg><use href="#i-bell"/></svg></span><h3>Erinnerungen</h3></div>
+          <p>Push-Benachrichtigungen pro Thema, zur Uhrzeit eurer Wahl. Aus der Meldung heraus abhaken oder um einen Tag verschieben. Überfälliges meldet sich täglich, bis es erledigt ist.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ch-shots">
+      <figure>
+        <div class="phone" data-shot="hub"><div class="screen"><img src="assets/screens/hub.webp" alt="Übersicht „Bereiche“ in Nestio, gruppiert nach Haushalt, Essen, Kinder und Organisation" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Alle Bereiche, gruppiert</figcaption>
+      </figure>
+      <figure>
+        <div class="phone" data-shot="birthdays"><div class="screen"><img src="assets/screens/birthdays.webp" alt="Geburtstage in Nestio: Oma Ingrid in 2 Tagen, Jonas in 4 Tagen, dazu Tabs für Wunschlisten und Geschenke" width="390" height="797" loading="lazy"></div></div>
+        <figcaption>Geburtstage, Wunschlisten und Geschenke</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Außenherum ════════════════════════════════════════════════════ -->
+<section class="outside">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Auch ohne die App zu öffnen</span>
+      <h2>Nestio ist da, wo ihr gerade seid.</h2>
+    </div>
+    <div class="out-grid">
+      <div class="out">
+        <div class="feat-title"><span class="feat-ico"><svg><use href="#i-share"/></svg></span><h3>Teilen</h3></div>
+        <p>Rezept im Browser gefunden? Über das Teilen-Menü direkt an Nestio schicken. Zutaten und Schritte werden übernommen.</p>
+      </div>
+      <div class="out">
+        <div class="feat-title"><span class="feat-ico"><svg><use href="#i-tablet"/></svg></span><h3>Tablet für die Kinder</h3></div>
+        <p>Die Kinderroutine läuft als eigene Seite im Browser des Familien-Tablets. Ein Link genügt, ohne Konto und ohne Zugriff auf den Rest.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Anpassen ══════════════════════════════════════════════════════ -->
+<section class="yours">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow">Einstellungen</span>
+      <h2>So viel Nestio, wie eure Familie braucht.</h2>
+      <p>Keine Schulkinder? Kein Interesse an Finanzen? Blendet aus, was ihr nicht braucht. Was bleibt, ordnet ihr so an, wie ihr es täglich nutzt.</p>
+    </div>
+    <div class="yours-list">
+      <div><b>Menüleiste</b><span>Home plus drei Bereiche eurer Wahl, jede Person für sich</span></div>
+      <div><b>Startseite</b><span>Wetter, Mitnehmen, Essen, Schule, Kalender, Aufgaben und mehr einzeln ein- und ausblenden</span></div>
+      <div><b>Bereiche</b><span>Ungenutzte Bereiche verschwinden aus der Übersicht</span></div>
+      <div><b>Benachrichtigungen</b><span>Pro Thema an oder aus, mit eigener Uhrzeit</span></div>
+      <div><b>Dark Mode</b><span>Hell, dunkel oder wie das System</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══════════════════════════════════════════════════════════ -->
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow">Fragen</span>
+      <h2>Was Eltern vorher wissen wollen.</h2>
+    </div>
+    <div>
+      <details>
+        <summary>Wie kommt mein Partner oder meine Partnerin dazu?</summary>
+        <p>Beim ersten Start legt ihr einen Haushalt an und bekommt einen Einladungscode. Wer ihn in der App eingibt, gehört zum Haushalt und sieht ab sofort dieselben Listen, Aufgaben und Pläne.</p>
+      </details>
+      <details>
+        <summary>Brauchen meine Kinder ein eigenes Handy oder Konto?</summary>
+        <p>Nein. Kinder legt ihr als Mitglied ohne Konto an, mit Profil, Geburtstag und Gesundheitsdaten. Ihre Routine haken sie an einem Tablet ab, das über einen eigenen Zugang nur die Routine zeigt.</p>
+      </details>
+      <details>
+        <summary>Wer sieht unsere Finanzen und Verträge?</summary>
+        <p>Nur die Mitglieder eures Haushalts. Behandelt den Einladungscode deshalb wie einen Haustürschlüssel: Wer ihn hat, sieht auch Finanzen, Verträge und Dokumente.</p>
+      </details>
+      <details>
+        <summary>Muss ich alle Bereiche nutzen?</summary>
+        <p>Nein. Startet mit Einkaufsliste und Aufgaben und nehmt dazu, was ihr braucht. Alles andere lässt sich in den Einstellungen ausblenden.</p>
+      </details>
+      <details>
+        <summary>Funktioniert Nestio mit unserem Google Kalender?</summary>
+        <p>Ja, Termine aus Google Kalender werden angezeigt. Nestio liest nur und ändert nichts. Welche Kalender sichtbar sind, wählt ihr selbst. Geburtstage lassen sich ebenfalls aus Google importieren.</p>
+      </details>
+      <details>
+        <summary>Kann ich Rezepte von Websites oder aus Kochbüchern übernehmen?</summary>
+        <p>Ja. Links schickt ihr über das Teilen-Menü an Nestio. Ein Foto vom Kochbuch reicht ebenfalls, Zutaten und Schritte werden daraus ausgelesen, auch über mehrere Fotos hinweg.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Schluss ═══════════════════════════════════════════════════════ -->
+<section class="final">
+  <div class="wrap">
+    <img src="assets/logo.png" alt="Nestio-Logo: eine Familie in einem Nest" width="140" height="102">
+    <h2>Ein Nest für alles, was eure Familie organisiert.</h2>
+    <p class="lede">Legt einen Haushalt an, ladet eure Familie ein und schreibt das Erste auf die Einkaufsliste.</p>
+    <div class="cta-row" style="justify-content:center">
+      <a class="btn btn-primary" href="https://github.com/LinaLarsson42/nestio-releases/releases/latest/download/Nestio.apk" data-goatcounter-click="download-apk"><svg><use href="#i-android"/></svg>Für Android laden</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Nestio</span>
+    <nav aria-label="Rechtliches">
+      <a href="impressum.html">Impressum</a>
+      <a href="datenschutz.html">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  // Kühlschrank + Familienchat → Nestio. Jedes Element mit data-to fliegt in die Zeile mit dieser id.
+  // data-bump zählt die Zahl in der Zeile hoch (Einkaufsliste). Start per Klick oder einmal automatisch,
+  // nachdem die Bühne eine Weile gut sichtbar war.
+  (function () {
+    var stage  = document.getElementById('stage');
+    var fridge = document.getElementById('fridge');
+    var scroller = document.getElementById('app-scroll');
+    var btn    = document.getElementById('tidy');
+    var undo   = document.getElementById('untidy');
+    var cap    = document.getElementById('stage-cap');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var rows   = Array.prototype.slice.call(stage.querySelectorAll('.app-row'));
+    // Reihenfolge: von oben nach unten im Handy, damit es nur abwärts scrollt. Quellen mischen sich dabei.
+    var all    = Array.prototype.slice.call(stage.querySelectorAll('[data-to]'));
+    all = all.map(function (el, i) { return { el: el, i: i, r: rows.indexOf(document.getElementById(el.dataset.to)) }; })
+             .sort(function (a, b) { return a.r - b.r || a.i - b.i; })
+             .map(function (o) { return o.el; });
+    var state = 'idle', autoplayed = false, timers = [], pending = null;
+    var HOLD = 4000;   // so lange bleibt der volle Kühlschrank stehen, bevor es von selbst losgeht
+    var DUR  = 1300;
+    var CAP_IDLE = cap.textContent;
+    var CAP_DONE = 'Alles in Nestio, für alle im Haushalt sichtbar. Am Kühlschrank bleibt, was dorthin gehört.';
+
+    function shown(el) { return getComputedStyle(el).display !== 'none'; }
+
+    // Magnete hängen an der Tür, nicht am Zettel: sie bleiben, wenn der Zettel wegfliegt.
+    function placeMagnets() {
+      fridge.querySelectorAll('.magnet').forEach(function (m) { m.remove(); });
+      fridge.querySelectorAll('.note[data-mag]').forEach(function (n) {
+        if (!shown(n)) return;
+        var m = document.createElement('span');
+        m.className = 'magnet';
+        m.style.setProperty('--mc', n.dataset.mag);
+        m.style.left = (n.offsetLeft + n.offsetWidth / 2) + 'px';
+        m.style.top  = (n.offsetTop + 2) + 'px';
+        fridge.appendChild(m);
+      });
+    }
+
+    function fill(row, from) {
+      if (!row) return;
+      if (from && from.dataset.bump && row.classList.contains('filled')) {
+        var n = row.querySelector('.n'); n.textContent = +n.textContent + (+from.dataset.bump);
+        row.classList.add('bumped'); setTimeout(function () { row.classList.remove('bumped'); }, 500);
+      }
+      row.classList.add('filled', 'flash');
+      setTimeout(function () { row.classList.remove('flash'); }, 700);
+    }
+
+    // Zeile im Handy sichtbar scrollen, falls nötig.
+    function reveal(row) {
+      var top = row.offsetTop - scroller.clientHeight * 0.45;
+      top = Math.max(0, Math.min(top, scroller.scrollHeight - scroller.clientHeight));
+      if (Math.abs(scroller.scrollTop - top) > 8 && (row.offsetTop < scroller.scrollTop + 20 || row.offsetTop + row.offsetHeight > scroller.scrollTop + scroller.clientHeight - 10))
+        scroller.scrollTo({ top: top, behavior: reduce.matches ? 'auto' : 'smooth' });
+    }
+
+    function ease(q) { return q < .5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; }
+
+    // Flug per requestAnimationFrame: das Ziel wird jedes Bild neu gemessen, damit der Zettel
+    // auch dann richtig landet, wenn das Handy oder die Seite währenddessen scrollt.
+    function fly(el, done) {
+      var row = document.getElementById(el.dataset.to);
+      reveal(row);
+      if (reduce.matches) { el.classList.add('gone'); fill(row, el); done(); return; }
+      var w = el.offsetWidth, h = el.offsetHeight, par = el.offsetParent;
+      var rot = parseFloat(getComputedStyle(el).getPropertyValue('--rot')) || 0;
+      var t0 = null;
+      el.classList.add('flying');
+      function frame(ts) {
+        if (t0 === null) t0 = ts;
+        var p = Math.min(1, (ts - t0) / DUR);
+        var pr = par.getBoundingClientRect(), tr = row.getBoundingClientRect();
+        var s  = Math.max(0.12, Math.min(0.5, (tr.height * 1.6) / h));
+        // Drehpunkt ist die Oberkante (Zettel hängen am Magneten); Ziel ist die Zeilenmitte.
+        var dx = (tr.left + tr.width * 0.4) - (pr.left + el.offsetLeft + w / 2);
+        var dy = (tr.top + tr.height / 2) - (pr.top + el.offsetTop) - (h * s) / 2;
+        var lift = -0.06 * h, x, y, sc, r = 0, op = 1, q;
+        if (p < 0.22)      { q = ease(p / 0.22); x = 0; y = lift * q; sc = 1 + 0.06 * q; r = rot * (1 - q); }
+        else if (p < 0.86) { q = ease((p - 0.22) / 0.64); x = dx * q; y = lift * (1 - q) + dy * q; sc = 1.06 + (s - 1.06) * q; }
+        else               { q = (p - 0.86) / 0.14; x = dx; y = dy; sc = s * (1 - 0.3 * q); op = 1 - q; }
+        el.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + r + 'deg) scale(' + sc + ')';
+        el.style.opacity = op;
+        if (p < 1) el._raf = requestAnimationFrame(frame);
+        else { el.classList.add('gone'); el.classList.remove('flying'); fill(row, el); done(); }
+      }
+      el._raf = requestAnimationFrame(frame);
+    }
+
+    function play() {
+      if (state !== 'idle') return;
+      disarm(); state = 'playing'; autoplayed = true;
+      btn.disabled = true; btn.textContent = 'Wird aufgeräumt …'; undo.hidden = false;
+      var list = all.filter(shown), left = list.length, gap = reduce.matches ? 90 : 380;
+      list.forEach(function (n, i) {
+        timers.push(setTimeout(function () { fly(n, function () { if (--left === 0) finish(); }); }, i * gap));
+      });
+    }
+
+    function finish() {
+      all.forEach(function (n) { var r = document.getElementById(n.dataset.to); if (!r.classList.contains('filled')) fill(r); });
+      state = 'done'; stage.classList.add('done');
+      btn.disabled = false; btn.textContent = 'Nochmal ansehen';
+      cap.textContent = CAP_DONE;
+      timers.push(setTimeout(function () { scroller.scrollTo({ top: 0, behavior: reduce.matches ? 'auto' : 'smooth' }); }, 900));
+    }
+
+    function reset() {
+      timers.forEach(clearTimeout); timers = [];
+      all.forEach(function (n) {
+        cancelAnimationFrame(n._raf);
+        n.classList.remove('gone', 'flying');
+        n.style.transform = ''; n.style.opacity = '';
+      });
+      rows.forEach(function (r) { r.classList.remove('filled', 'flash', 'bumped'); });
+      stage.querySelectorAll('.n[data-base]').forEach(function (n) { n.textContent = n.dataset.base; });
+      scroller.scrollTop = 0;
+      stage.classList.remove('done'); state = 'idle';
+      cap.textContent = CAP_IDLE; btn.textContent = 'Mit Nestio aufräumen';
+      btn.disabled = false; undo.hidden = true;
+    }
+
+    btn.addEventListener('click', function () {
+      if (state === 'done') { reset(); setTimeout(play, 250); } else play();
+    });
+    // Zurücksetzen hängt alles wieder auf und bleibt dort: kein erneuter Autostart.
+    undo.addEventListener('click', function () { autoplayed = true; disarm(); reset(); btn.focus(); });
+
+    // Autostart erst, wenn die Bühne eine Weile gut sichtbar war. Scrollt man weg,
+    // bricht der Countdown ab und beginnt beim nächsten Mal von vorn.
+    function arm() {
+      if (autoplayed || state !== 'idle' || pending) return;
+      if (reduce.matches) return;   // ohne Bewegung kein Autostart, nur per Klick
+      btn.style.setProperty('--hold', HOLD + 'ms');
+      btn.classList.add('arming');
+      pending = setTimeout(play, HOLD);
+    }
+    function disarm() { clearTimeout(pending); pending = null; btn.classList.remove('arming'); }
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) arm(); else disarm();
+      }, { threshold: 0.7 }).observe(stage);
+    }
+
+    var rz;
+    window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(placeMagnets, 120); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeMagnets);
+    placeMagnets();
+  })();
+</script>
+<script>
+  // Einkaufs-Widget wie widgets/EinkaufWidget.tsx: so viele Artikel, wie hineinpassen,
+  // darunter „+ n weitere“. Antippen hakt ab; ist alles weg, füllt es sich nach kurzer Zeit neu.
+  (function () {
+    var START = ['Milch', 'Eier', 'Kürbis', 'Haferflocken', 'Kaffee', 'Spültabs'];
+    var FIT = 5;
+    var items = START.slice();
+    var box = document.getElementById('wd-items'), more = document.getElementById('wd-more');
+    var counts = [document.getElementById('wd-count'), document.getElementById('wd-count2')];
+    function render() {
+      box.innerHTML = '';
+      counts.forEach(function (c) { c.textContent = items.length; });
+      if (!items.length) {
+        box.innerHTML = '<span class="mut" style="font-size:3.4cqw">Alles erledigt 🎉</span>';
+        more.textContent = '';
+        setTimeout(function () { items = START.slice(); render(); }, 2500);
+        return;
+      }
+      items.slice(0, FIT).forEach(function (name) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-label', name + ' abhaken');
+        b.innerHTML = '<i aria-hidden="true">○</i><span></span>';
+        b.lastChild.textContent = name;
+        b.addEventListener('click', function () {
+          if (b.classList.contains('done')) return;
+          b.classList.add('done'); b.firstChild.textContent = '●';
+          setTimeout(function () { items.splice(items.indexOf(name), 1); render(); }, 600);
+        });
+        box.appendChild(b);
+      });
+      var rest = items.length - Math.min(FIT, items.length);
+      more.textContent = rest > 0 ? '+ ' + rest + ' weitere' : '';
+    }
+    render();
+  })();
+</script>
+<!-- Besucherzählung mit GoatCounter: ohne Cookies, daher kein Cookie-Banner nötig.
+     In der Datenschutzerklärung (datenschutz.html, Abschnitt 4) beschrieben. -->
+<script data-goatcounter="https://nestio.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

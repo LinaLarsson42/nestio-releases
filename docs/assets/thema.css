@@ -1,0 +1,137 @@
+/* Themen-Unterseiten (haushalt.html, essen.html, kinder.html, organisation.html).
+   Gleiche Marke wie index.html; Leitmotiv „Mental Load“: Oben stehen die Gedanken,
+   die Nestio aus dem Kopf nimmt, darunter je Bereich Gedanke → Lösung. */
+:root {
+  --bg: #F4F7F5; --surface: #FFFFFF; --ink: #14231C; --muted: #56685F; --line: #D9E3DD;
+  --green: #2D6A4F; --green-ink: #FFFFFF; --sage: #95D5B2; --pale: #E3F1E9; --amber: #E9A23B;
+  --paper: #FFF6D6; --paper-ink: #3A3320; --strike: #D7323F;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+  --wrap: 1100px; --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1311; --surface: #161E1A; --ink: #ECF2EE; --muted: #A2B3AA; --line: #26332D;
+    --green: #5CBF90; --green-ink: #0D1311; --sage: #4E8F6E; --pale: #17271F; --amber: #F2B043;
+    --paper: #2A2717; --paper-ink: #F3E9C6; --strike: #F26D6D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1311; --surface: #161E1A; --ink: #ECF2EE; --muted: #A2B3AA; --line: #26332D;
+  --green: #5CBF90; --green-ink: #0D1311; --sage: #4E8F6E; --pale: #17271F; --amber: #F2B043;
+  --paper: #2A2717; --paper-ink: #F3E9C6; --strike: #F26D6D;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.6; padding-inline: 20px; overflow-x: hidden; }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: var(--wrap); margin-inline: auto; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.08; text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2.3rem, 5.4vw, 4rem); font-weight: 800; }
+h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); font-weight: 800; }
+h3 { font-size: 1.2rem; font-weight: 700; }
+p { margin: 0; }
+.eyebrow { font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+.lede { font-size: 1.18rem; color: var(--muted); max-width: 36em; }
+
+/* Navigation */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -20px; padding: 12px 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 22px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--f-display); font-weight: 800; font-size: 1.4rem; }
+.brand img { width: 46px; height: auto; }
+.nav-links { display: flex; gap: 20px; margin-left: auto; font-weight: 600; font-size: .95rem; }
+.nav-links a { text-decoration: none; color: var(--muted); padding-block: 4px; }
+.nav-links a:hover { color: var(--ink); }
+.btn { display: inline-flex; align-items: center; gap: .5em; text-decoration: none; font-weight: 700; font-size: 1rem; padding: .9em 1.35em; border-radius: 999px; border: 2px solid transparent; }
+.btn-primary { background: var(--green); color: var(--green-ink); }
+.btn-ghost { border-color: var(--line); }
+.nav .btn { padding: .55em 1.05em; font-size: .9rem; }
+/* Gemeinsame Navigation (Hauptseite und Themenseiten): auf dem Handy als Menü-Knopf */
+.nav-links a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--green); }
+.menu { display: none; position: relative; margin-left: auto; }
+.menu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary svg { width: 22px; height: 22px; }
+.menu-panel { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; min-width: 230px; display: grid; padding: 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 18px 40px -12px rgb(0 0 0 / .3); }
+.menu-panel a { text-decoration: none; font-weight: 600; padding: 10px 12px; border-radius: 10px; }
+.menu-panel a:hover, .menu-panel a[aria-current="page"] { background: var(--pale); }
+@media (max-width: 900px) { .nav-links { display: none; } .menu { display: block; } .nav .btn { margin-left: 0; } }
+
+/* Zurück zur Übersicht, oben auf jeder Themenseite */
+.back { justify-self: start; text-decoration: none; font-weight: 600; font-size: .95rem; color: var(--muted); }
+.back:hover { color: var(--green); }
+
+/* Kopf der Seite: Text links, „Gedanken, die du loswirst“ rechts */
+.topic-hero { padding-block: 60px 48px; }
+.topic-hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+.topic-hero .copy { display: grid; gap: 22px; min-width: 0; }
+.mental { display: grid; gap: 8px; padding: 26px 26px 22px; background: var(--paper); color: var(--paper-ink); border-radius: 6px; transform: rotate(-1.2deg); box-shadow: 0 18px 36px -18px rgb(0 0 0 / .35); min-width: 0; }
+.mental b { font-family: var(--f-body); font-size: .76rem; letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+.mental ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.mental li { font-family: var(--f-hand); font-size: 1.6rem; line-height: 1.2; text-decoration: line-through; text-decoration-color: var(--strike); text-decoration-thickness: 2.5px; }
+.mental .foot { font-family: var(--f-body); font-size: .9rem; margin-top: 6px; }
+@media (max-width: 880px) { .topic-hero .wrap { grid-template-columns: 1fr; gap: 36px; } }
+
+/* Sprungmarken zu den Bereichen */
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { text-decoration: none; font-size: .9rem; font-weight: 600; padding: .4em .9em; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.jump a:hover { border-color: var(--green); }
+
+/* Ein Bereich: Gedanke → Lösung */
+.feature { padding-block: 64px; border-top: 1px solid var(--line); scroll-margin-top: 80px; }
+.feature .wrap { display: grid; grid-template-columns: 1fr 300px; gap: 56px; align-items: start; }
+.feature.flip .wrap { grid-template-columns: 300px 1fr; }
+.feature.flip .side { order: -1; }
+/* Ohne Screenshot: eine Spalte, der Entlastungs-Kasten steht unter den Punkten */
+.feature.noshot .wrap, .feature.noshot.flip .wrap { grid-template-columns: 1fr; }
+.feature.noshot .side { order: 0; position: static; max-width: 560px; }
+.feature .body { display: grid; gap: 20px; min-width: 0; }
+.feature .head { display: grid; gap: 10px; }
+.feature .head p { color: var(--muted); font-size: 1.08rem; max-width: 38em; }
+.thought { font-family: var(--f-hand); font-size: 1.75rem; line-height: 1.15; color: var(--green); }
+.thought::before { content: "„"; } .thought::after { content: "“"; }
+.points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; margin: 0; padding: 0; list-style: none; }
+.points li { display: grid; gap: 4px; align-content: start; padding-left: 16px; border-left: 3px solid var(--pale); min-width: 0; }
+.points li b { font-family: var(--f-display); font-size: 1.02rem; }
+.points li span { color: var(--muted); font-size: .98rem; }
+.side { display: grid; gap: 14px; position: sticky; top: 96px; }
+.side figcaption { font-size: .85rem; color: var(--muted); text-align: center; }
+.side figure { margin: 0; }
+.relief { padding: 18px 20px; border-radius: var(--r); background: var(--pale); display: grid; gap: 6px; }
+.relief b { font-size: .76rem; letter-spacing: .12em; text-transform: uppercase; color: var(--green); }
+.relief p { font-size: .98rem; }
+@media (max-width: 900px) {
+  .feature .wrap, .feature.flip .wrap { grid-template-columns: 1fr; gap: 32px; }
+  .feature.flip .side { order: 0; }
+  .side { position: static; max-width: 340px; }
+}
+@media (max-width: 600px) { .points { grid-template-columns: 1fr; } }
+
+/* Handy mit Screenshot */
+.phone { position: relative; width: 100%; max-width: 100%; border-radius: 40px; padding: 10px; background: #0F1513; box-shadow: 0 28px 56px -20px rgb(20 35 28 / .35), inset 0 0 0 1.5px #3A4641; }
+.phone .screen { border-radius: 31px; overflow: hidden; aspect-ratio: 390 / 797; background: #F8F9FA; }
+.phone .screen img { width: 100%; height: 100%; object-fit: cover; }
+.phone::before { content: ""; position: absolute; top: 16px; left: 50%; translate: -50% 0; width: 10px; height: 10px; border-radius: 50%; background: #0F1513; z-index: 1; }
+
+/* Weiter zu den anderen Themen */
+.more { padding-block: 72px; border-top: 1px solid var(--line); }
+.more .wrap { display: grid; gap: 28px; }
+.topics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.topics a { text-decoration: none; display: grid; gap: 6px; padding: 22px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.topics a:hover { border-color: var(--green); }
+.topics b { font-family: var(--f-display); font-size: 1.2rem; }
+.topics span { color: var(--muted); font-size: .95rem; }
+@media (max-width: 760px) { .topics { grid-template-columns: 1fr; } }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+footer { padding-block: 32px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
