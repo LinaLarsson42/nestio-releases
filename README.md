@@ -9,6 +9,8 @@
   &nbsp;·&nbsp; kostenlos &nbsp;·&nbsp; Updates kommen über die App
 </p>
 
+<p align="center"><a href="https://linalarsson42.github.io/nestio-releases/">Zur Website</a></p>
+
 ---
 
 ## Warum Nestio?
